@@ -1,16 +1,17 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
 
-  //Navbar gets the token directly from localStorage
-  const token = localStorage.getItem("token");
+  // Get token and logout from context
+  const { token, logout } = useAuth();
 
   //Logout clears token from Local Storage
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    logout();
     navigate("/");
   };
   return (
