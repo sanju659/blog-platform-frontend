@@ -5,6 +5,12 @@ import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
+import PrivateRoute from "./components/PrivateRoute";
+
+
+import CreatePost from "./pages/CreatePost";
+import MyPosts from "./pages/MyPosts";
+import PostDetails from "./pages/PostDetails";
 
 const App = () => {
   return (
@@ -15,7 +21,34 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+
+        {/* Protected route */}
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/create-post"
+          element={
+            <PrivateRoute>
+              <CreatePost />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/my-posts"
+          element={
+            <PrivateRoute>
+              <MyPosts />
+            </PrivateRoute>
+          }
+        />
+        {/* Unprotected Routes  */}
+        <Route path="/posts/:id" element={<PostDetails />} />
       </Routes>
     </>
   );
