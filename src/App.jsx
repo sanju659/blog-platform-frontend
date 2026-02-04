@@ -11,6 +11,7 @@ import PrivateRoute from "./components/PrivateRoute";
 import CreatePost from "./pages/CreatePost";
 import MyPosts from "./pages/MyPosts";
 import PostDetails from "./pages/PostDetails";
+import EditPost from "./pages/EditPage"
 
 const App = () => {
   return (
@@ -49,6 +50,14 @@ const App = () => {
         />
         {/* Unprotected Routes  */}
         <Route path="/posts/:id" element={<PostDetails />} />
+        <Route
+          path="/edit-post/:id"
+          element={
+            <PrivateRoute>
+              <EditPost />
+            </PrivateRoute>
+          }
+        />
       </Routes>
     </>
   );
