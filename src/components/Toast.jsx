@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { FiCheckCircle, FiX } from "react-icons/fi";
+import { FiCheckCircle, FiX, FiAlertCircle } from "react-icons/fi";
 
 const Toast = ({ message, onClose, type = "success" }) => {
   useEffect(() => {
@@ -11,13 +11,14 @@ const Toast = ({ message, onClose, type = "success" }) => {
   }, [onClose]);
 
   const bgColor = type === "success" ? "bg-green-500" : "bg-red-500";
+  const Icon = type === "success" ? FiCheckCircle : FiAlertCircle;
 
   return (
     <div className="fixed top-4 right-4 z-50 animate-slideInRight">
       <div
         className={`${bgColor} text-white px-6 py-4 rounded-lg shadow-2xl flex items-center gap-3 min-w-75`}
       >
-        <FiCheckCircle className="text-2xl shrink-0" />
+        <Icon className="text-2xl shrink-0" />
         <p className="flex-1 font-medium">{message}</p>
         <button
           onClick={onClose}
