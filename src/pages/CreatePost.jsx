@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPost } from "../api/postApi";
 import Toast from "../components/Toast";
+import { FiUpload, FiX } from "react-icons/fi";
 
 const CreatePost = () => {
   const navigate = useNavigate();
@@ -10,16 +11,17 @@ const CreatePost = () => {
     title: "",
     content: "",
     excerpt: "",
-    image: "",
     category: "",
   });
 
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
-  // Handle input changes (When user type something that is shown in the fields)
+  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -28,43 +30,98 @@ const CreatePost = () => {
     });
   };
 
-  // Handle Save as Draft
-  const handleSaveAsDraft = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSubmitting(true);
+  // Handle image selection
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Here is the file object
+      /*console.log(file);*/
+      /*File {name: 'Psyduck.jpg', lastModified: 1767162359228, lastModifiedDate: Wed Dec 31 2025 11:55:59 GMT+0530 (India Standard Time), webkitRelativePath: '', size: 24626, …}
+       lastModified : 1767162359228
+       lastModifiedDate : Wed Dec 31 2025 11:55:59 GMT+0530 (India Standard Time) {}
+       name : "Psyduck.jpg"
+       size : 24626
+       type : "image/jpeg"
+       [[Prototype]] : File
+      */
 
-    try {
-      await createPost({ ...formData, published: false });
-      setToastMessage("Post saved as draft successfully!");
-      setShowToast(true);
+      // Validate file size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Image size should be less than 5MB");
+        return;
+      }
 
-      setTimeout(() => {
-        navigate("/my-posts");
-      }, 1500);
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to save draft");
-      setSubmitting(false);
+      // Validate file type
+      const allowedTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+      ];
+      if (!allowedTypes.includes(file.type)) {
+        setError("Only image files (JPEG, PNG, GIF, WebP) are allowed");
+        return;
+      }
+
+      setImageFile(file);
+
+      // Image preview Url
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+      // console.log(previewUrl); --> blob:http://localhost:5173/f0960946-a899-4be7-ab37-73dff2d132ed
+
+      setError("");
     }
   };
 
-  // Handle Publish Post
-  const handlePublish = async (e) => {
-    e.preventDefault();
+  // Remove selected image
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+  };
+
+  // Handle form submission
+  const handleSubmit = async (published) => {
     setError("");
     setSubmitting(true);
 
     try {
-      const res = await createPost({ ...formData, published: true });
-      setToastMessage("Post published successfully!");
+      // Create 'FormData object' for file upload as we can not send 'json' data
+      //Create empty form container
+      const formDataToSend = new FormData();
+      // Add text fields
+      formDataToSend.append("title", formData.title);
+      formDataToSend.append("content", formData.content);
+      formDataToSend.append("excerpt", formData.excerpt);
+      formDataToSend.append("category", formData.category);
+      formDataToSend.append("published", published);
+      //Adding file
+      if (imageFile) {
+        formDataToSend.append("image", imageFile);
+      }
+
+      // So here we send the data to 'create post' api
+      const res = await createPost(formDataToSend);
+
+      setToastMessage(
+        // IF published true then 'success' and if not then 'save as draft'
+        published
+          ? "Post published successfully!"
+          : "Post saved as draft successfully!",
+      );
+
       setShowToast(true);
 
       setTimeout(() => {
-        // Navigate to the newly created post
-        navigate(`/posts/${res.data.userpost._id}`);
+        if (published) {
+          navigate(`/posts/${res.data.userpost._id}`);
+        } else {
+          navigate("/my-posts");
+        }
       }, 1500);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to publish post");
+      setError(err.response?.data?.message || "Failed to create post");
       setSubmitting(false);
     }
   };
@@ -72,7 +129,9 @@ const CreatePost = () => {
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 py-10">
       <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl p-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Create New Post</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-6">
+          Create New Post
+        </h1>
 
         {error && (
           <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg">
@@ -128,19 +187,50 @@ const CreatePost = () => {
             />
           </div>
 
-          {/* Image URL */}
+          {/* Image Upload */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Image URL
+              Post Image
             </label>
-            <input
-              type="url"
-              name="image"
-              value={formData.image}
-              onChange={handleChange}
-              placeholder="https://example.com/image.jpg"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition"
-            />
+
+            {!imagePreview ? (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                  id="image-upload"
+                />
+                <label
+                  htmlFor="image-upload"
+                  className="cursor-pointer flex flex-col items-center"
+                >
+                  <FiUpload className="text-4xl text-gray-400 mb-2" />
+                  <span className="text-sm text-gray-600">
+                    Click to upload an image
+                  </span>
+                  <span className="text-xs text-gray-500 mt-1">
+                    PNG, JPG, GIF, WebP (Max 5MB)
+                  </span>
+                </label>
+              </div>
+            ) : (
+              <div className="relative">
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-full h-64 object-cover rounded-lg"
+                />
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition"
+                >
+                  <FiX />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Category */}
@@ -169,7 +259,7 @@ const CreatePost = () => {
             {/* Save as Draft */}
             <button
               type="button"
-              onClick={handleSaveAsDraft}
+              onClick={() => handleSubmit(false)}
               disabled={submitting}
               className="flex-1 bg-amber-500 text-white py-3 rounded-lg font-medium hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
@@ -179,7 +269,7 @@ const CreatePost = () => {
             {/* Publish */}
             <button
               type="button"
-              onClick={handlePublish}
+              onClick={() => handleSubmit(true)}
               disabled={submitting}
               className="flex-1 bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
