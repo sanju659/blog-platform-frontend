@@ -7,7 +7,7 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   // Get token and logout from context
-  const { token, logout } = useAuth();
+  const { token, logout, user } = useAuth();
 
   //Logout clears token from Local Storage
   const handleLogout = () => {
@@ -42,12 +42,18 @@ const Navbar = () => {
             </>
           ) : (
             <>
-              <Link
-                to="/dashboard"
-                className="text-indigo-100 hover:text-white"
-              >
-                Dashboard
-              </Link>
+              {user?.role === "admin" ? (
+                <Link to="/admin" className="text-indigo-100 hover:text-white">
+                  Admin 
+                </Link>
+              ) : (
+                <Link
+                  to="/dashboard"
+                  className="text-indigo-100 hover:text-white"
+                >
+                  Dashboard
+                </Link>
+              )}
               <button
                 onClick={handleLogout}
                 className="px-4 py-1 border border-white text-white rounded hover:bg-white hover:text-indigo-600 transition"
@@ -117,13 +123,23 @@ const Navbar = () => {
             </>
           ) : (
             <>
-              <Link
-                to="/dashboard"
-                className="block py-2 text-indigo-100 hover:text-white"
-                onClick={() => setOpen(false)}
-              >
-                Dashboard
-              </Link>
+              {user?.role === "admin" ? (
+                <Link
+                  to="/admin"
+                  className="block py-2 text-indigo-100 hover:text-white"
+                  onClick={() => setOpen(false)}
+                >
+                  Admin 
+                </Link>
+              ) : (
+                <Link
+                  to="/dashboard"
+                  className="block py-2 text-indigo-100 hover:text-white"
+                  onClick={() => setOpen(false)}
+                >
+                  Dashboard
+                </Link>
+              )}
               <button
                 onClick={handleLogout}
                 className="block py-2 text-left w-full text-indigo-100 hover:text-white"

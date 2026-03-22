@@ -6,12 +6,17 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import PrivateRoute from "./components/PrivateRoute";
-
+import AdminRoute from "./components/AdminRoute";
 
 import CreatePost from "./pages/CreatePost";
 import MyPosts from "./pages/MyPosts";
 import PostDetails from "./pages/PostDetails";
-import EditPost from "./pages/EditPage"
+import EditPost from "./pages/EditPage";
+
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminPosts from "./pages/admin/AdminPosts";
+import AdminReports from "./pages/admin/AdminReports";
 
 const App = () => {
   return (
@@ -56,6 +61,38 @@ const App = () => {
             <PrivateRoute>
               <EditPost />
             </PrivateRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <AdminRoute>
+              <AdminUsers />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/posts"
+          element={
+            <AdminRoute>
+              <AdminPosts />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/reports"
+          element={
+            <AdminRoute>
+              <AdminReports />
+            </AdminRoute>
           }
         />
       </Routes>

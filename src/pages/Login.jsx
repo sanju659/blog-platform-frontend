@@ -37,7 +37,12 @@ const Login = () => {
       // Store auth data (token and user) in local storage (This function is from AuthContext)
       login(res.data.token, res.data.user);
       // Redirecting to the dashboard after right credentials
-      navigate("/dashboard");
+      // console.log(res.data.user);
+      if (res.data.user.role === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
       // Setting the Error message if happen any
       setError(err.response?.data?.message || "Something went wrong");
