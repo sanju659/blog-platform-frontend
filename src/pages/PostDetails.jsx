@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getPostById, deletePost } from "../api/postApi";
 import { useAuth } from "../context/AuthContext";
-import { FiEdit, FiTrash2 } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiAlertTriangle } from "react-icons/fi";
 import DeleteModal from "../components/DeleteModal";
 import Toast from "../components/Toast";
+import ReportModal from "../components/ReportModal";
 
 const PostDetails = () => {
   const { id } = useParams();
@@ -16,6 +17,7 @@ const PostDetails = () => {
   const [error, setError] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showToast, setShowToast] = useState(false); // Toast state (it is the msg that shows that the post is deleted)
+  const [showReportModal, setShowReportModal] = useState(false);
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -49,7 +51,7 @@ const PostDetails = () => {
     }
   };
 
-// Handling editing post
+  // Handling editing post
   const handleEdit = () => {
     navigate(`/edit-post/${id}`);
   };
@@ -135,9 +137,26 @@ const PostDetails = () => {
               </button>
             </div>
           )}
+
+          {/* Show report button to logged-in non-authors */}
+          {user && !isAuthor && user.role !== "admin" && (
+            <button
+              onClick={() => setShowReportModal(true)}
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 active:scale-95 transition"
+            >
+              <FiAlertTriangle /> Report
+            </button>
+          )}
+
+          {/* Report Modal */}
+          <ReportModal
+            isOpen={showReportModal}
+            onClose={() => setShowReportModal(false)}
+            postId={id}
+          />
         </div>
       </div>
-      
+
       {/* Here is the custom delete modal to confirm deletion */}
       <DeleteModal
         isOpen={showDeleteModal}
