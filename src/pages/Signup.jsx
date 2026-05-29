@@ -12,7 +12,7 @@ const Signup = () => {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [image, setImage] = useState("");
+  // const [image, setImage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -30,7 +30,7 @@ const Signup = () => {
 
     try {
       // Call signup API
-      await signupApi({ fullName, email, password, image });
+      await signupApi({ fullName, email, password });
 
       // Show success toast
       setToastMessage("Signup successful! ");
@@ -133,7 +133,7 @@ const Signup = () => {
         </div>
 
         {/* Profile Image URL */}
-        <div className="mb-6">
+        {/* <div className="mb-6">
           <label className="block text-sm font-medium text-gray-600 mb-1">
             Profile Image URL
           </label>
@@ -144,10 +144,7 @@ const Signup = () => {
             value={image}
             onChange={(e) => setImage(e.target.value)}
           />
-          {/* <p className="text-xs text-gray-500 mt-1">
-            Leave empty for default avatar
-          </p> */}
-        </div>
+        </div> */}
 
         {/* Submit Button */}
         <button
