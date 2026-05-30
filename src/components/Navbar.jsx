@@ -44,7 +44,7 @@ const Navbar = () => {
             <>
               {user?.role === "admin" ? (
                 <Link to="/admin" className="text-indigo-100 hover:text-white">
-                  Admin 
+                  Admin
                 </Link>
               ) : (
                 <Link
@@ -54,6 +54,9 @@ const Navbar = () => {
                   Dashboard
                 </Link>
               )}
+              <Link to="/profile" className="text-indigo-100 hover:text-white">
+                Profile
+              </Link>
               <button
                 onClick={handleLogout}
                 className="px-4 py-1 border border-white text-white rounded hover:bg-white hover:text-indigo-600 transition"
@@ -129,7 +132,7 @@ const Navbar = () => {
                   className="block py-2 text-indigo-100 hover:text-white"
                   onClick={() => setOpen(false)}
                 >
-                  Admin 
+                  Admin
                 </Link>
               ) : (
                 <Link
@@ -140,6 +143,13 @@ const Navbar = () => {
                   Dashboard
                 </Link>
               )}
+              <Link
+                to="/profile"
+                className="block py-2 text-indigo-100 hover:text-white"
+                onClick={() => setOpen(false)}
+              >
+                Profile
+              </Link>
               <button
                 onClick={handleLogout}
                 className="block py-2 text-left w-full text-indigo-100 hover:text-white"

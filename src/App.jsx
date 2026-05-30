@@ -12,6 +12,7 @@ import CreatePost from "./pages/CreatePost";
 import MyPosts from "./pages/MyPosts";
 import PostDetails from "./pages/PostDetails";
 import EditPost from "./pages/EditPage";
+import Profile from "./pages/Profile";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -93,6 +94,14 @@ const App = () => {
             <AdminRoute>
               <AdminReports />
             </AdminRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <PrivateRoute>
+              <Profile />
+            </PrivateRoute>
           }
         />
       </Routes>
