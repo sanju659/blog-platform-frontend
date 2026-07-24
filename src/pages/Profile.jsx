@@ -58,10 +58,6 @@ const Profile = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setProfileError("Image size should be less than 5MB");
-        return;
-      }
       const allowedTypes = [
         "image/jpeg",
         "image/jpg",

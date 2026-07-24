@@ -77,10 +77,6 @@ const EditPage = () => {
 
     const validFiles = [];
     for (const file of files) {
-      if (file.size > 5 * 1024 * 1024) {
-        setError(`"${file.name}" exceeds 5MB and was skipped`);
-        continue;
-      }
       if (!allowedTypes.includes(file.type)) {
         setError(`"${file.name}" is not a supported image type and was skipped`);
         continue;
@@ -293,8 +289,8 @@ const EditPage = () => {
                     Click to add image(s)
                   </span>
                   <span className="text-xs text-gray-500 mt-1">
-                    PNG, JPG, GIF, WebP (Max 5MB each, up to {MAX_IMAGES} total)
-                  </span>
+                    PNG, JPG, GIF, WebP — up to {MAX_IMAGES} total
+                  </span> 
                 </label>
               </div>
             )}

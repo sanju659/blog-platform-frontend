@@ -47,12 +47,10 @@ const CreatePost = () => {
 
     const validFiles = [];
     for (const file of files) {
-      if (file.size > 5 * 1024 * 1024) {
-        setError(`"${file.name}" exceeds 5MB and was skipped`);
-        continue;
-      }
       if (!allowedTypes.includes(file.type)) {
-        setError(`"${file.name}" is not a supported image type and was skipped`);
+        setError(
+          `"${file.name}" is not a supported image type and was skipped`,
+        );
         continue;
       }
       validFiles.push(file);
@@ -234,7 +232,7 @@ const CreatePost = () => {
                     Click to upload image(s)
                   </span>
                   <span className="text-xs text-gray-500 mt-1">
-                    PNG, JPG, GIF, WebP (Max 5MB each, up to {MAX_IMAGES} images)
+                    PNG, JPG, GIF, WebP — up to {MAX_IMAGES} images
                   </span>
                 </label>
               </div>
