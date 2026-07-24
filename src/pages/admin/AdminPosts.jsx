@@ -81,7 +81,10 @@ const AdminPosts = () => {
             <h1 className="text-3xl font-bold text-gray-900">Manage Posts</h1>
             <p className="text-gray-600 mt-1">View, delete or restore posts</p>
           </div>
-          <Link to="/admin" className="flex items-center gap-2 text-indigo-600 hover:underline text-sm">
+          <Link
+            to="/admin"
+            className="flex items-center gap-2 text-indigo-600 hover:underline text-sm"
+          >
             <FaArrowLeft /> Back to Dashboard
           </Link>
         </div>
@@ -134,7 +137,10 @@ const AdminPosts = () => {
               >
                 {/* Post Image */}
                 <img
-                  src={post.images?.[0]}
+                  src={
+                    post.media?.find((m) => m.type === "image")?.url ||
+                    "https://via.placeholder.com/400x250?text=No+Image"
+                  }
                   alt={post.title}
                   className="w-24 h-24 object-cover rounded-lg shrink-0"
                 />

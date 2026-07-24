@@ -33,7 +33,7 @@ const CreatePost = () => {
     if (files.length === 0) return;
 
     if (imageFiles.length + files.length > MAX_IMAGES) {
-      setError(`You can upload a maximum of ${MAX_IMAGES} images`);
+      setError(`You can upload a maximum of ${MAX_IMAGES} media items`);
       return;
     }
 
@@ -43,13 +43,16 @@ const CreatePost = () => {
       "image/png",
       "image/gif",
       "image/webp",
+      "video/mp4",
+      "video/webm",
+      "video/quicktime",
     ];
 
     const validFiles = [];
     for (const file of files) {
       if (!allowedTypes.includes(file.type)) {
         setError(
-          `"${file.name}" is not a supported image type and was skipped`,
+          `"${file.name}" is not a supported image/video type and was skipped`,
         );
         continue;
       }
@@ -61,11 +64,13 @@ const CreatePost = () => {
     setImageFiles((prev) => [...prev, ...validFiles]);
     setImagePreviews((prev) => [
       ...prev,
-      ...validFiles.map((file) => URL.createObjectURL(file)),
+      ...validFiles.map((file) => ({
+        url: URL.createObjectURL(file),
+        type: file.type.startsWith("video/") ? "video" : "image",
+      })),
     ]);
     setError("");
 
-    // Allow re-selecting the same file later
     e.target.value = "";
   };
 
@@ -88,7 +93,7 @@ const CreatePost = () => {
 
       // Append each image under the same field name "images"
       imageFiles.forEach((file) => {
-        formDataToSend.append("images", file);
+        formDataToSend.append("media", file);
       });
 
       const res = await createPost(formDataToSend);
@@ -190,14 +195,27 @@ const CreatePost = () => {
               <div className="grid grid-cols-3 gap-3 mb-3">
                 {imagePreviews.map((preview, index) => (
                   <div key={index} className="relative">
-                    <img
-                      src={preview}
-                      alt={`Preview ${index + 1}`}
-                      className="w-full h-28 object-cover rounded-lg"
-                    />
+                    {preview.type === "video" ? (
+                      <video
+                        src={preview.url}
+                        className="w-full h-28 object-cover rounded-lg"
+                        muted
+                      />
+                    ) : (
+                      <img
+                        src={preview.url}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full h-28 object-cover rounded-lg"
+                      />
+                    )}
                     {index === 0 && (
                       <span className="absolute bottom-1 left-1 bg-indigo-600 text-white text-[10px] px-2 py-0.5 rounded-full font-medium">
                         Cover
+                      </span>
+                    )}
+                    {preview.type === "video" && (
+                      <span className="absolute top-1 left-1 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full font-medium">
+                        Video
                       </span>
                     )}
                     <button
@@ -217,7 +235,7 @@ const CreatePost = () => {
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition">
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/*,video/*"
                   multiple
                   onChange={handleImageChange}
                   className="hidden"
@@ -229,10 +247,10 @@ const CreatePost = () => {
                 >
                   <FiUpload className="text-4xl text-gray-400 mb-2" />
                   <span className="text-sm text-gray-600">
-                    Click to upload image(s)
+                    Click to upload image(s) or video(s)
                   </span>
                   <span className="text-xs text-gray-500 mt-1">
-                    PNG, JPG, GIF, WebP — up to {MAX_IMAGES} images
+                    Images or videos — up to {MAX_IMAGES} items
                   </span>
                 </label>
               </div>

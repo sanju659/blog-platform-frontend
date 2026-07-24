@@ -42,7 +42,7 @@ const EditPage = () => {
           category: post.category || "",
         });
 
-        setExistingImages(post.images || []);
+        setExistingImages(post.media || []);
       } catch (err) {
         setError(err.response?.data?.message || "Failed to load post");
       } finally {
@@ -63,7 +63,7 @@ const EditPage = () => {
     if (files.length === 0) return;
 
     if (totalImageCount + files.length > MAX_IMAGES) {
-      setError(`You can have a maximum of ${MAX_IMAGES} images total`);
+      setError(`You can have a maximum of ${MAX_IMAGES} media items total`);
       return;
     }
 
@@ -73,12 +73,17 @@ const EditPage = () => {
       "image/png",
       "image/gif",
       "image/webp",
+      "video/mp4",
+      "video/webm",
+      "video/quicktime",
     ];
 
     const validFiles = [];
     for (const file of files) {
       if (!allowedTypes.includes(file.type)) {
-        setError(`"${file.name}" is not a supported image type and was skipped`);
+        setError(
+          `"${file.name}" is not a supported image/video type and was skipped`,
+        );
         continue;
       }
       validFiles.push(file);
@@ -89,7 +94,10 @@ const EditPage = () => {
     setNewImageFiles((prev) => [...prev, ...validFiles]);
     setNewImagePreviews((prev) => [
       ...prev,
-      ...validFiles.map((file) => URL.createObjectURL(file)),
+      ...validFiles.map((file) => ({
+        url: URL.createObjectURL(file),
+        type: file.type.startsWith("video/") ? "video" : "image",
+      })),
     ]);
     setError("");
     e.target.value = "";
@@ -116,12 +124,12 @@ const EditPage = () => {
       formDataToSend.append("category", formData.category);
       formDataToSend.append("published", published);
 
-      // Tell backend which existing images to keep
-      formDataToSend.append("existingImages", JSON.stringify(existingImages));
+      // Tell backend which existing media to keep
+      formDataToSend.append("existingMedia", JSON.stringify(existingImages));
 
       // Append newly added files
       newImageFiles.forEach((file) => {
-        formDataToSend.append("images", file);
+        formDataToSend.append("media", file);
       });
 
       await updatePost(id, formDataToSend);
@@ -226,16 +234,29 @@ const EditPage = () => {
             {/* Existing + new previews together */}
             {(existingImages.length > 0 || newImagePreviews.length > 0) && (
               <div className="grid grid-cols-3 gap-3 mb-3">
-                {existingImages.map((img, index) => (
+                {existingImages.map((item, index) => (
                   <div key={`existing-${index}`} className="relative">
-                    <img
-                      src={img}
-                      alt={`Existing ${index + 1}`}
-                      className="w-full h-28 object-cover rounded-lg"
-                    />
+                    {item.type === "video" ? (
+                      <video
+                        src={item.url}
+                        className="w-full h-28 object-cover rounded-lg"
+                        muted
+                      />
+                    ) : (
+                      <img
+                        src={item.url}
+                        alt={`Existing ${index + 1}`}
+                        className="w-full h-28 object-cover rounded-lg"
+                      />
+                    )}
                     {index === 0 && (
                       <span className="absolute bottom-1 left-1 bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded-full font-medium">
                         Cover
+                      </span>
+                    )}
+                    {item.type === "video" && (
+                      <span className="absolute top-1 left-1 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full font-medium">
+                        Video
                       </span>
                     )}
                     <button
@@ -250,14 +271,27 @@ const EditPage = () => {
 
                 {newImagePreviews.map((preview, index) => (
                   <div key={`new-${index}`} className="relative">
-                    <img
-                      src={preview}
-                      alt={`New ${index + 1}`}
-                      className="w-full h-28 object-cover rounded-lg"
-                    />
+                    {preview.type === "video" ? (
+                      <video
+                        src={preview.url}
+                        className="w-full h-28 object-cover rounded-lg"
+                        muted
+                      />
+                    ) : (
+                      <img
+                        src={preview.url}
+                        alt={`New ${index + 1}`}
+                        className="w-full h-28 object-cover rounded-lg"
+                      />
+                    )}
                     <span className="absolute bottom-1 left-1 bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full font-medium">
                       New
                     </span>
+                    {preview.type === "video" && (
+                      <span className="absolute top-1 left-1 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full font-medium">
+                        Video
+                      </span>
+                    )}
                     <button
                       type="button"
                       onClick={() => removeNewImage(index)}
@@ -274,7 +308,7 @@ const EditPage = () => {
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition">
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/*,video/*"
                   multiple
                   onChange={handleImageChange}
                   className="hidden"
@@ -286,11 +320,11 @@ const EditPage = () => {
                 >
                   <FiUpload className="text-4xl text-gray-400 mb-2" />
                   <span className="text-sm text-gray-600">
-                    Click to add image(s)
+                    Click to upload image(s) or video(s)
                   </span>
                   <span className="text-xs text-gray-500 mt-1">
-                    PNG, JPG, GIF, WebP — up to {MAX_IMAGES} total
-                  </span> 
+                    Images or videos — up to {MAX_IMAGES} items
+                  </span>
                 </label>
               </div>
             )}

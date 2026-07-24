@@ -41,7 +41,10 @@ const Home = () => {
               >
                 {/* Post image */}
                 <img
-                  src={post.images?.[0]}
+                  src={
+                    post.media?.find((m) => m.type === "image")?.url ||
+                    "https://via.placeholder.com/400x250?text=No+Image"
+                  }
                   alt={post.title}
                   className="h-48 w-full object-cover object-top"
                 />
