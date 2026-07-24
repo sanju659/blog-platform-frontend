@@ -134,7 +134,7 @@ const AdminPosts = () => {
               >
                 {/* Post Image */}
                 <img
-                  src={post.image}
+                  src={post.images?.[0]}
                   alt={post.title}
                   className="w-24 h-24 object-cover rounded-lg shrink-0"
                 />

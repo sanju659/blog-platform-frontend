@@ -6,6 +6,7 @@ import { FiEdit, FiTrash2, FiAlertTriangle } from "react-icons/fi";
 import DeleteModal from "../components/DeleteModal";
 import Toast from "../components/Toast";
 import ReportModal from "../components/ReportModal";
+import ImageCarousel from "../components/ImageCarousel";
 
 const PostDetails = () => {
   const { id } = useParams();
@@ -73,14 +74,11 @@ const PostDetails = () => {
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 py-10">
       <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
-        {post.image && (
-          <div className="relative">
-            <img
-              src={post.image}
-              alt={post.title}
-              className="w-full h-96 object-cover"
-            />
-            <div className="absolute inset-0 bg-black/10" />
+        {post.images?.length > 0 && (
+          <div className="px-8 pt-8 md:px-10 md:pt-10">
+            <div className="rounded-xl overflow-hidden">
+              <ImageCarousel images={post.images} />
+            </div>
           </div>
         )}
 

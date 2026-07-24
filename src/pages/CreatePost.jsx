@@ -4,6 +4,8 @@ import { createPost } from "../api/postApi";
 import Toast from "../components/Toast";
 import { FiUpload, FiX } from "react-icons/fi";
 
+const MAX_IMAGES = 5;
+
 const CreatePost = () => {
   const navigate = useNavigate();
 
@@ -14,103 +16,90 @@ const CreatePost = () => {
     category: "",
   });
 
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [imageFiles, setImageFiles] = useState([]); // File objects
+  const [imagePreviews, setImagePreviews] = useState([]); // preview URLs (same order as imageFiles)
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
-  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData({ ...formData, [name]: value });
   };
 
-  // Handle image selection
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // Here is the file object
-      /*console.log(file);*/
-      /*File {name: 'Psyduck.jpg', lastModified: 1767162359228, lastModifiedDate: Wed Dec 31 2025 11:55:59 GMT+0530 (India Standard Time), webkitRelativePath: '', size: 24626, …}
-       lastModified : 1767162359228
-       lastModifiedDate : Wed Dec 31 2025 11:55:59 GMT+0530 (India Standard Time) {}
-       name : "Psyduck.jpg"
-       size : 24626
-       type : "image/jpeg"
-       [[Prototype]] : File
-      */
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
 
-      // Validate file size (5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setError("Image size should be less than 5MB");
-        return;
-      }
-
-      // Validate file type
-      const allowedTypes = [
-        "image/jpeg",
-        "image/jpg",
-        "image/png",
-        "image/gif",
-        "image/webp",
-      ];
-      if (!allowedTypes.includes(file.type)) {
-        setError("Only image files (JPEG, PNG, GIF, WebP) are allowed");
-        return;
-      }
-
-      setImageFile(file);
-
-      // Image preview Url
-      const previewUrl = URL.createObjectURL(file);
-      setImagePreview(previewUrl);
-      // console.log(previewUrl); --> blob:http://localhost:5173/f0960946-a899-4be7-ab37-73dff2d132ed
-
-      setError("");
+    if (imageFiles.length + files.length > MAX_IMAGES) {
+      setError(`You can upload a maximum of ${MAX_IMAGES} images`);
+      return;
     }
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+    ];
+
+    const validFiles = [];
+    for (const file of files) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError(`"${file.name}" exceeds 5MB and was skipped`);
+        continue;
+      }
+      if (!allowedTypes.includes(file.type)) {
+        setError(`"${file.name}" is not a supported image type and was skipped`);
+        continue;
+      }
+      validFiles.push(file);
+    }
+
+    if (validFiles.length === 0) return;
+
+    setImageFiles((prev) => [...prev, ...validFiles]);
+    setImagePreviews((prev) => [
+      ...prev,
+      ...validFiles.map((file) => URL.createObjectURL(file)),
+    ]);
+    setError("");
+
+    // Allow re-selecting the same file later
+    e.target.value = "";
   };
 
-  // Remove selected image
-  const removeImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
+  const removeImage = (index) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Handle form submission
   const handleSubmit = async (published) => {
     setError("");
     setSubmitting(true);
 
     try {
-      // Create 'FormData object' for file upload as we can not send 'json' data
-      //Create empty form container
       const formDataToSend = new FormData();
-      // Add text fields
       formDataToSend.append("title", formData.title);
       formDataToSend.append("content", formData.content);
       formDataToSend.append("excerpt", formData.excerpt);
       formDataToSend.append("category", formData.category);
       formDataToSend.append("published", published);
-      //Adding file
-      if (imageFile) {
-        formDataToSend.append("image", imageFile);
-      }
 
-      // So here we send the data to 'create post' api
+      // Append each image under the same field name "images"
+      imageFiles.forEach((file) => {
+        formDataToSend.append("images", file);
+      });
+
       const res = await createPost(formDataToSend);
 
       setToastMessage(
-        // IF published true then 'success' and if not then 'save as draft'
         published
           ? "Post published successfully!"
           : "Post saved as draft successfully!",
       );
-
       setShowToast(true);
 
       setTimeout(() => {
@@ -187,17 +176,51 @@ const CreatePost = () => {
             />
           </div>
 
-          {/* Image Upload */}
+          {/* Image Upload (multiple) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Post Image
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Post Images
+              </label>
+              <span className="text-xs text-gray-500">
+                {imageFiles.length}/{MAX_IMAGES}
+              </span>
+            </div>
 
-            {!imagePreview ? (
+            {/* Preview grid */}
+            {imagePreviews.length > 0 && (
+              <div className="grid grid-cols-3 gap-3 mb-3">
+                {imagePreviews.map((preview, index) => (
+                  <div key={index} className="relative">
+                    <img
+                      src={preview}
+                      alt={`Preview ${index + 1}`}
+                      className="w-full h-28 object-cover rounded-lg"
+                    />
+                    {index === 0 && (
+                      <span className="absolute bottom-1 left-1 bg-indigo-600 text-white text-[10px] px-2 py-0.5 rounded-full font-medium">
+                        Cover
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition"
+                    >
+                      <FiX className="text-xs" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Upload dropzone (hidden once max reached) */}
+            {imageFiles.length < MAX_IMAGES && (
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition">
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   onChange={handleImageChange}
                   className="hidden"
                   id="image-upload"
@@ -208,27 +231,12 @@ const CreatePost = () => {
                 >
                   <FiUpload className="text-4xl text-gray-400 mb-2" />
                   <span className="text-sm text-gray-600">
-                    Click to upload an image
+                    Click to upload image(s)
                   </span>
                   <span className="text-xs text-gray-500 mt-1">
-                    PNG, JPG, GIF, WebP (Max 5MB)
+                    PNG, JPG, GIF, WebP (Max 5MB each, up to {MAX_IMAGES} images)
                   </span>
                 </label>
-              </div>
-            ) : (
-              <div className="relative">
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  className="w-full h-64 object-cover rounded-lg"
-                />
-                <button
-                  type="button"
-                  onClick={removeImage}
-                  className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition"
-                >
-                  <FiX />
-                </button>
               </div>
             )}
           </div>
@@ -256,7 +264,6 @@ const CreatePost = () => {
 
           {/* Action Buttons */}
           <div className="flex gap-4 pt-4">
-            {/* Save as Draft */}
             <button
               type="button"
               onClick={() => handleSubmit(false)}
@@ -266,7 +273,6 @@ const CreatePost = () => {
               {submitting ? "Saving..." : "Save as Draft"}
             </button>
 
-            {/* Publish */}
             <button
               type="button"
               onClick={() => handleSubmit(true)}
@@ -276,7 +282,6 @@ const CreatePost = () => {
               {submitting ? "Publishing..." : "Publish Post"}
             </button>
 
-            {/* Cancel */}
             <button
               type="button"
               onClick={() => navigate("/dashboard")}
@@ -288,7 +293,6 @@ const CreatePost = () => {
         </form>
       </div>
 
-      {/* Success Toast */}
       {showToast && (
         <Toast
           message={toastMessage}

@@ -177,7 +177,7 @@ const MyPosts = () => {
                 >
                   <img
                     src={
-                      post.image ||
+                      post.images?.[0] || 
                       "https://via.placeholder.com/400x250?text=No+Image"
                     }
                     alt={post.title}

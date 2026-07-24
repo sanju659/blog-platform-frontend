@@ -41,7 +41,7 @@ const Home = () => {
               >
                 {/* Post image */}
                 <img
-                  src={post.image}
+                  src={post.images?.[0]}
                   alt={post.title}
                   className="h-48 w-full object-cover object-top"
                 />

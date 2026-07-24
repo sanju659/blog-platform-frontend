@@ -4,6 +4,8 @@ import { getPostById, updatePost } from "../api/postApi";
 import Toast from "../components/Toast";
 import { FiUpload, FiX } from "react-icons/fi";
 
+const MAX_IMAGES = 5;
+
 const EditPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -15,23 +17,24 @@ const EditPage = () => {
     category: "",
   });
 
-  const [existingImage, setExistingImage] = useState(null); // Store existing image URL
-  const [imageFile, setImageFile] = useState(null); // New image file
-  const [imagePreview, setImagePreview] = useState(null); // Preview for new image
+  const [existingImages, setExistingImages] = useState([]); // URLs already on the post (kept ones)
+  const [newImageFiles, setNewImageFiles] = useState([]); // newly added File objects
+  const [newImagePreviews, setNewImagePreviews] = useState([]); // preview URLs for new files
+
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
-  // Fetch existing post data
+  const totalImageCount = existingImages.length + newImageFiles.length;
+
   useEffect(() => {
     const fetchPost = async () => {
       try {
         const res = await getPostById(id);
         const post = res.data;
 
-        // Pre-fill form with existing data
         setFormData({
           title: post.title || "",
           content: post.content || "",
@@ -39,8 +42,7 @@ const EditPage = () => {
           category: post.category || "",
         });
 
-        // Store existing image
-        setExistingImage(post.image || null);
+        setExistingImages(post.images || []);
       } catch (err) {
         setError(err.response?.data?.message || "Failed to load post");
       } finally {
@@ -51,62 +53,66 @@ const EditPage = () => {
     fetchPost();
   }, [id]);
 
-  // Handle input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData({ ...formData, [name]: value });
   };
 
-  // Handle image selection
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // Validate file size (5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setError("Image size should be less than 5MB");
-        return;
-      }
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
 
-      // Validate file type
-      const allowedTypes = [
-        "image/jpeg",
-        "image/jpg",
-        "image/png",
-        "image/gif",
-        "image/webp",
-      ];
-      if (!allowedTypes.includes(file.type)) {
-        setError("Only image files (JPEG, PNG, GIF, WebP) are allowed");
-        return;
-      }
-
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
-      setError("");
+    if (totalImageCount + files.length > MAX_IMAGES) {
+      setError(`You can have a maximum of ${MAX_IMAGES} images total`);
+      return;
     }
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/gif",
+      "image/webp",
+    ];
+
+    const validFiles = [];
+    for (const file of files) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError(`"${file.name}" exceeds 5MB and was skipped`);
+        continue;
+      }
+      if (!allowedTypes.includes(file.type)) {
+        setError(`"${file.name}" is not a supported image type and was skipped`);
+        continue;
+      }
+      validFiles.push(file);
+    }
+
+    if (validFiles.length === 0) return;
+
+    setNewImageFiles((prev) => [...prev, ...validFiles]);
+    setNewImagePreviews((prev) => [
+      ...prev,
+      ...validFiles.map((file) => URL.createObjectURL(file)),
+    ]);
+    setError("");
+    e.target.value = "";
   };
 
-  // Remove new selected image (revert to existing)
-  const removeNewImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
+  const removeExistingImage = (index) => {
+    setExistingImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Remove existing image completely
-  const removeExistingImage = () => {
-    setExistingImage(null);
+  const removeNewImage = (index) => {
+    setNewImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setNewImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // Handle form submission
   const handleSubmit = async (published) => {
     setError("");
     setSubmitting(true);
 
     try {
-      // Create FormData object
       const formDataToSend = new FormData();
       formDataToSend.append("title", formData.title);
       formDataToSend.append("content", formData.content);
@@ -114,10 +120,13 @@ const EditPage = () => {
       formDataToSend.append("category", formData.category);
       formDataToSend.append("published", published);
 
-      // Add new image if selected
-      if (imageFile) {
-        formDataToSend.append("image", imageFile);
-      }
+      // Tell backend which existing images to keep
+      formDataToSend.append("existingImages", JSON.stringify(existingImages));
+
+      // Append newly added files
+      newImageFiles.forEach((file) => {
+        formDataToSend.append("images", file);
+      });
 
       await updatePost(id, formDataToSend);
       setToastMessage(
@@ -207,77 +216,88 @@ const EditPage = () => {
             />
           </div>
 
-          {/* Image Upload/Update */}
+          {/* Images */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Post Image
-            </label>
-
-            {/* Preview if image exists */}
-            {imagePreview || existingImage ? (
-              <div className="relative">
-                <img
-                  src={imagePreview || existingImage}
-                  alt="Preview"
-                  className="w-full h-64 object-cover rounded-lg"
-                />
-
-                {/* Remove button */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (imagePreview) removeNewImage();
-                    else removeExistingImage();
-                  }}
-                  className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition"
-                >
-                  <FiX />
-                </button>
-
-                {/* Status badge */}
-                <span
-                  className={`absolute bottom-2 left-2 px-3 py-1 rounded-full text-xs font-semibold text-white
-          ${imagePreview ? "bg-green-500" : "bg-blue-500"}`}
-                >
-                  {imagePreview ? "New Image" : "Current Image"}
-                </span>
-              </div>
-            ) : (
-              /* Empty state */
-              <label
-                htmlFor="image-upload"
-                className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center
-             hover:border-indigo-500 transition cursor-pointer block"
-              >
-                <FiUpload className="text-4xl text-gray-400 mb-2 mx-auto" />
-                <p className="text-sm text-gray-600">
-                  Click to upload an image
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  PNG, JPG, GIF, WebP (Max 5MB)
-                </p>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Post Images
               </label>
+              <span className="text-xs text-gray-500">
+                {totalImageCount}/{MAX_IMAGES}
+              </span>
+            </div>
+
+            {/* Existing + new previews together */}
+            {(existingImages.length > 0 || newImagePreviews.length > 0) && (
+              <div className="grid grid-cols-3 gap-3 mb-3">
+                {existingImages.map((img, index) => (
+                  <div key={`existing-${index}`} className="relative">
+                    <img
+                      src={img}
+                      alt={`Existing ${index + 1}`}
+                      className="w-full h-28 object-cover rounded-lg"
+                    />
+                    {index === 0 && (
+                      <span className="absolute bottom-1 left-1 bg-blue-500 text-white text-[10px] px-2 py-0.5 rounded-full font-medium">
+                        Cover
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeExistingImage(index)}
+                      className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition"
+                    >
+                      <FiX className="text-xs" />
+                    </button>
+                  </div>
+                ))}
+
+                {newImagePreviews.map((preview, index) => (
+                  <div key={`new-${index}`} className="relative">
+                    <img
+                      src={preview}
+                      alt={`New ${index + 1}`}
+                      className="w-full h-28 object-cover rounded-lg"
+                    />
+                    <span className="absolute bottom-1 left-1 bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full font-medium">
+                      New
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeNewImage(index)}
+                      className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition"
+                    >
+                      <FiX className="text-xs" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             )}
 
-            {/* Upload / Change button (always visible) */}
-            <div className="mt-3">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="hidden"
-                id="image-upload"
-              />
-              <label
-                htmlFor="image-upload"
-                className="cursor-pointer inline-flex items-center gap-2 bg-indigo-50 text-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-100 transition"
-              >
-                <FiUpload />
-                {imagePreview || existingImage
-                  ? "Change Image"
-                  : "Upload Image"}
-              </label>
-            </div>
+            {totalImageCount < MAX_IMAGES && (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition">
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageChange}
+                  className="hidden"
+                  id="image-upload"
+                />
+                <label
+                  htmlFor="image-upload"
+                  className="cursor-pointer flex flex-col items-center"
+                >
+                  <FiUpload className="text-4xl text-gray-400 mb-2" />
+                  <span className="text-sm text-gray-600">
+                    Click to add image(s)
+                  </span>
+                  <span className="text-xs text-gray-500 mt-1">
+                    PNG, JPG, GIF, WebP (Max 5MB each, up to {MAX_IMAGES} total)
+                  </span>
+                </label>
+              </div>
+            )}
           </div>
 
           {/* Category */}
