@@ -18,6 +18,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminPosts from "./pages/admin/AdminPosts";
 import AdminReports from "./pages/admin/AdminReports";
+import AdminPostDetails from "./pages/admin/AdminPostDetails";
 
 const App = () => {
   return (
@@ -93,6 +94,14 @@ const App = () => {
           element={
             <AdminRoute>
               <AdminReports />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/posts/:id"
+          element={
+            <AdminRoute>
+              <AdminPostDetails />
             </AdminRoute>
           }
         />

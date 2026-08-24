@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import {
   getAllPostsAdmin,
-  softDeletePost,
-  restorePost,
+  // softDeletePost,
+  // restorePost,
 } from "../../api/adminApi";
 import { Link } from "react-router-dom";
 import Toast from "../../components/Toast";
 import { FaArrowLeft } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const AdminPosts = () => {
+  const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -43,7 +45,7 @@ const AdminPosts = () => {
   };
 
   // post delete handler function
-  const handleSoftDelete = async (postId) => {
+  /*const handleSoftDelete = async (postId) => {
     try {
       await softDeletePost(postId, { reason: "violation" });
       setToastMessage("Post deleted successfully");
@@ -55,10 +57,10 @@ const AdminPosts = () => {
       setToastType("error");
       setShowToast(true);
     }
-  };
+  };*/
 
   // post restore handler function
-  const handleRestore = async (postId) => {
+  /*const handleRestore = async (postId) => {
     try {
       await restorePost(postId);
       setToastMessage("Post restored successfully");
@@ -70,7 +72,7 @@ const AdminPosts = () => {
       setToastType("error");
       setShowToast(true);
     }
-  };
+  };*/
 
   return (
     <div className="min-h-screen bg-gray-100 py-10">
@@ -133,13 +135,14 @@ const AdminPosts = () => {
             {posts.map((post) => (
               <div
                 key={post._id}
-                className="bg-white rounded-xl shadow p-5 flex gap-4 items-start"
+                onClick={() => navigate(`/admin/posts/${post._id}`)}
+                className="bg-white rounded-xl shadow p-5 flex gap-4 items-start cursor-pointer hover:shadow-md transition"
               >
                 {/* Post Image */}
                 <img
                   src={
-                    post.media?.find((m) => m.type === "image")?.url ||
-                    "https://via.placeholder.com/400x250?text=No+Image"
+                    post.images?.[0] ||
+                    post.media?.find((m) => m.type === "image")?.url
                   }
                   alt={post.title}
                   className="w-24 h-24 object-cover rounded-lg shrink-0"
@@ -176,25 +179,6 @@ const AdminPosts = () => {
                       </span>
                     )}
                   </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-2 shrink-0">
-                  {!post.isDeleted ? (
-                    <button
-                      onClick={() => handleSoftDelete(post._id)}
-                      className="px-4 py-2 bg-red-100 text-red-600 rounded-lg text-sm font-medium hover:bg-red-200 transition"
-                    >
-                      Delete
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleRestore(post._id)}
-                      className="px-4 py-2 bg-emerald-100 text-emerald-700 rounded-lg text-sm font-medium hover:bg-emerald-200 transition"
-                    >
-                      Restore
-                    </button>
-                  )}
                 </div>
               </div>
             ))}

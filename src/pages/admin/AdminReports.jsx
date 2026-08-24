@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import {
   getAllReports,
-  dismissReport,
-  reviewReport,
+  // dismissReport,
+  // reviewReport,
 } from "../../api/reportApi";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Toast from "../../components/Toast";
 
 const AdminReports = () => {
+  const navigate = useNavigate();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -40,44 +41,44 @@ const AdminReports = () => {
     }
   };
 
-  const handleDismiss = async (reportId) => {
-    try {
-      await dismissReport(reportId, {
-        note: "No violation found",
-      });
+  // const handleDismiss = async (reportId) => {
+  //   try {
+  //     await dismissReport(reportId, {
+  //       note: "No violation found",
+  //     });
 
-      setToastMessage("Report dismissed successfully");
-      setToastType("success");
-      setShowToast(true);
+  //     setToastMessage("Report dismissed successfully");
+  //     setToastType("success");
+  //     setShowToast(true);
 
-      fetchReports();
-    } catch (err) {
-      setToastMessage(
-        err.response?.data?.message || "Failed to dismiss report",
-      );
-      setToastType("error");
-      setShowToast(true);
-    }
-  };
+  //     fetchReports();
+  //   } catch (err) {
+  //     setToastMessage(
+  //       err.response?.data?.message || "Failed to dismiss report",
+  //     );
+  //     setToastType("error");
+  //     setShowToast(true);
+  //   }
+  // };
 
-  const handleReview = async (reportId) => {
-    try {
-      await reviewReport(reportId, {
-        deletionReason: "violation",
-        note: "Post removed after review",
-      });
+  // const handleReview = async (reportId) => {
+  //   try {
+  //     await reviewReport(reportId, {
+  //       deletionReason: "violation",
+  //       note: "Post removed after review",
+  //     });
 
-      setToastMessage("Post deleted and report marked as reviewed");
-      setToastType("success");
-      setShowToast(true);
+  //     setToastMessage("Post deleted and report marked as reviewed");
+  //     setToastType("success");
+  //     setShowToast(true);
 
-      fetchReports();
-    } catch (err) {
-      setToastMessage(err.response?.data?.message || "Failed to review report");
-      setToastType("error");
-      setShowToast(true);
-    }
-  };
+  //     fetchReports();
+  //   } catch (err) {
+  //     setToastMessage(err.response?.data?.message || "Failed to review report");
+  //     setToastType("error");
+  //     setShowToast(true);
+  //   }
+  // };
 
   const getReasonBadge = (reason) => {
     const styles = {
@@ -193,30 +194,18 @@ const AdminReports = () => {
                       {new Date(report.createdAt).toLocaleDateString()}
                     </p>
                   </div>
-
-                  {/* Actions */}
-                  {report.status === "pending" && (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleDismiss(report._id)}
-                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition"
-                      >
-                        Dismiss
-                      </button>
-
-                      <button
-                        onClick={() => handleReview(report._id)}
-                        className="px-4 py-2 bg-red-100 text-red-600 rounded-lg text-sm font-medium hover:bg-red-200 transition"
-                      >
-                        Delete Post
-                      </button>
-                    </div>
-                  )}
                 </div>
 
                 {/* Post Info */}
                 {report.post && (
-                  <Link to={`/posts/${report.post._id}`} className="block">
+                  <div
+                    onClick={() =>
+                      navigate(`/admin/posts/${report.post._id}`, {
+                        state: { reportId: report._id },
+                      })
+                    }
+                    className="block"
+                  >
                     <div className="bg-gray-50 rounded-lg p-4 hover:bg-indigo-50 transition cursor-pointer border border-transparent hover:border-indigo-200">
                       <p className="text-xs text-gray-500 mb-1">
                         Reported Post — click to view
@@ -239,7 +228,7 @@ const AdminReports = () => {
                         </p>
                       )}
                     </div>
-                  </Link>
+                  </div>
                 )}
 
                 {/* Reporter Info */}
