@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import VideoPlayer from "./VideoPlayer";
 
 const MediaCarousel = ({ media = [] }) => {
   const [current, setCurrent] = useState(0);
@@ -20,11 +21,7 @@ const MediaCarousel = ({ media = [] }) => {
     <div className="relative group">
       {/* Main media */}
       {currentItem.type === "video" ? (
-        <video
-          src={currentItem.url}
-          controls
-          className="w-full h-96 object-cover bg-black"
-        />
+        <VideoPlayer key={currentItem.url} src={currentItem.url} />
       ) : (
         <img
           src={currentItem.url}
