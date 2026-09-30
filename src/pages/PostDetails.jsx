@@ -35,6 +35,26 @@ const PostDetails = () => {
     fetchPost();
   }, [id]);
 
+  // Poll for updates while any media item is still processing (e.g. video compression)
+  useEffect(() => {
+    const hasProcessingMedia = post?.media?.some(
+      (m) => m.status === "processing",
+    );
+
+    if (!hasProcessingMedia) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await getPostById(id);
+        setPost(res.data);
+      } catch (err) {
+        // silently ignore poll failures
+      }
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [post, id]);
+
   // This function is deleting the post if user confirmed to delete it
   const handleDeleteConfirm = async () => {
     try {

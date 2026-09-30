@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import {
+  FiChevronLeft,
+  FiChevronRight,
+  FiLoader,
+  FiAlertCircle,
+} from "react-icons/fi";
 import VideoPlayer from "./VideoPlayer";
 
 const MediaCarousel = ({ media = [] }) => {
@@ -20,7 +25,33 @@ const MediaCarousel = ({ media = [] }) => {
   return (
     <div className="relative group">
       {/* Main media */}
-      {currentItem.type === "video" ? (
+      {currentItem.status === "processing" ? (
+        <div className="w-full h-96 bg-gray-900 flex flex-col items-center justify-center gap-3 text-white">
+          <FiLoader className="text-4xl animate-spin" />
+          <p className="text-sm text-gray-300">
+            Video processing...
+            {typeof currentItem.progress === "number" && (
+              <span className="font-semibold text-white">
+                {" "}
+                {currentItem.progress}%
+              </span>
+            )}
+          </p>
+          {typeof currentItem.progress === "number" && (
+            <div className="w-48 h-1.5 bg-gray-700 rounded-full overflow-hidden mt-1">
+              <div
+                className="h-full bg-indigo-500 transition-all duration-500"
+                style={{ width: `${currentItem.progress}%` }}
+              />
+            </div>
+          )}
+        </div>
+      ) : currentItem.status === "failed" ? (
+        <div className="w-full h-96 bg-gray-900 flex flex-col items-center justify-center gap-3 text-white">
+          <FiAlertCircle className="text-4xl text-red-400" />
+          <p className="text-sm text-gray-300">Video processing failed</p>
+        </div>
+      ) : currentItem.type === "video" ? (
         <VideoPlayer key={currentItem.url} src={currentItem.url} />
       ) : (
         <img
@@ -70,7 +101,18 @@ const MediaCarousel = ({ media = [] }) => {
         <div className="flex gap-2 mt-3 px-1 overflow-x-auto pb-1">
           {media.map((item, index) => (
             <div key={index} className="relative shrink-0">
-              {item.type === "video" ? (
+              {item.status === "processing" ? (
+                <div
+                  onClick={() => setCurrent(index)}
+                  className={`w-16 h-16 rounded-lg cursor-pointer border-2 bg-gray-800 flex items-center justify-center transition ${
+                    index === current
+                      ? "border-indigo-600"
+                      : "border-transparent opacity-70 hover:opacity-100"
+                  }`}
+                >
+                  <FiLoader className="text-white text-lg animate-spin" />
+                </div>
+              ) : item.type === "video" ? (
                 <video
                   src={item.url}
                   onClick={() => setCurrent(index)}
