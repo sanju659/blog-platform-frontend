@@ -4,6 +4,7 @@ import { getMyPosts, deletePost } from "../api/postApi";
 import { FiEdit, FiTrash2 } from "react-icons/fi";
 import DeleteModal from "../components/DeleteModal";
 import Toast from "../components/Toast";
+import Skeleton from "../components/Skeleton";
 
 import { AiOutlinePlusCircle } from "react-icons/ai";
 import { FaPlus } from "react-icons/fa";
@@ -86,7 +87,39 @@ const MyPosts = () => {
   };
 
   if (loading) {
-    return <p className="text-center mt-10">Loading your posts...</p>;
+    return (
+      <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 py-10">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="flex justify-between items-center mb-8">
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-40" />
+              <Skeleton className="h-4 w-56" />
+            </div>
+            <Skeleton className="h-12 w-44 rounded-lg" />
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="bg-white rounded-2xl shadow-md overflow-hidden"
+              >
+                <Skeleton className="h-48 w-full rounded-none" />
+                <div className="p-5 space-y-3">
+                  <Skeleton className="h-5 w-20 rounded-full" />
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-4 w-full" />
+                  <div className="flex gap-2 pt-2">
+                    <Skeleton className="h-9 flex-1 rounded-lg" />
+                    <Skeleton className="h-9 flex-1 rounded-lg" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

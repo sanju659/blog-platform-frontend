@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getDashboardStats } from "../../api/adminApi";
+import Skeleton from "../../components/Skeleton";
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
@@ -22,7 +23,45 @@ const AdminDashboard = () => {
     fetchStats();
   }, []);
 
-  if (loading) return <p className="text-center mt-10">Loading dashboard...</p>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 py-10">
+        <div className="max-w-6xl mx-auto px-6 space-y-8">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-56" />
+            <Skeleton className="h-4 w-72" />
+          </div>
+
+          <div>
+            <Skeleton className="h-6 w-20 mb-4" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-24 rounded-xl" />
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <Skeleton className="h-6 w-20 mb-4" />
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-24 rounded-xl" />
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <Skeleton className="h-6 w-24 mb-4" />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-24 rounded-xl" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   if (error) return <p className="text-center mt-10 text-red-600">{error}</p>;
 
   return (

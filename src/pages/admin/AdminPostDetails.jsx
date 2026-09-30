@@ -9,6 +9,7 @@ import Toast from "../../components/Toast";
 import { FiTrash2, FiRotateCcw, FiCheck } from "react-icons/fi";
 import { FaArrowLeft } from "react-icons/fa";
 import { dismissReport, reviewReport } from "../../api/reportApi";
+import Skeleton from "../../components/Skeleton";
 
 const AdminPostDetails = () => {
   const { id } = useParams();
@@ -99,7 +100,9 @@ const AdminPostDetails = () => {
         navigate("/admin/reports");
       }, 1200);
     } catch (err) {
-      setToastMessage(err.response?.data?.message || "Failed to dismiss report");
+      setToastMessage(
+        err.response?.data?.message || "Failed to dismiss report",
+      );
       setToastType("error");
       setShowToast(true);
       setShowDismissModal(false);
@@ -107,7 +110,38 @@ const AdminPostDetails = () => {
   };
 
   if (loading) {
-    return <p className="text-center mt-10">Loading post...</p>;
+    return (
+      <div className="min-h-screen bg-gray-100 py-10">
+        <div className="max-w-4xl mx-auto px-6 mb-4 flex justify-between items-center">
+          <Skeleton className="h-4 w-40" />
+        </div>
+
+        <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+          <Skeleton className="w-full h-96 rounded-none" />
+          <div className="p-8 md:p-10 space-y-6">
+            <Skeleton className="h-6 w-28 rounded-full" />
+            <Skeleton className="h-10 w-3/4" />
+            <div className="flex items-center gap-4">
+              <Skeleton className="w-14 h-14 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-40" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+            </div>
+            <div className="space-y-3 pt-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
+            </div>
+            <div className="flex gap-4 pt-6 border-t">
+              <Skeleton className="h-11 w-36 rounded-lg" />
+              <Skeleton className="h-11 w-36 rounded-lg" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
@@ -125,7 +159,8 @@ const AdminPostDetails = () => {
           to={reportId ? "/admin/reports" : "/admin/posts"}
           className="flex items-center gap-2 text-indigo-600 hover:underline text-sm"
         >
-          <FaArrowLeft /> {reportId ? "Back to Manage Reports" : "Back to Manage Posts"}
+          <FaArrowLeft />{" "}
+          {reportId ? "Back to Manage Reports" : "Back to Manage Posts"}
         </Link>
 
         {post.isDeleted && (

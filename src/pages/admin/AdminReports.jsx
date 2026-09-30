@@ -6,6 +6,7 @@ import {
 } from "../../api/reportApi";
 import { Link, useNavigate } from "react-router-dom";
 import Toast from "../../components/Toast";
+import Skeleton from "../../components/Skeleton";
 
 const AdminReports = () => {
   const navigate = useNavigate();
@@ -169,7 +170,31 @@ const AdminReports = () => {
 
         {/* Reports */}
         {loading ? (
-          <p className="text-center mt-10">Loading reports...</p>
+          <div className="grid gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-xl shadow p-6 space-y-4">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Skeleton className="h-6 w-16 rounded-full" />
+                      <Skeleton className="h-6 w-16 rounded-full" />
+                    </div>
+                    <Skeleton className="h-3 w-32" />
+                  </div>
+                </div>
+
+                <Skeleton className="h-20 w-full rounded-lg" />
+
+                <div className="flex items-center gap-3">
+                  <Skeleton className="w-8 h-8 rounded-full" />
+                  <div className="space-y-1">
+                    <Skeleton className="h-3 w-28" />
+                    <Skeleton className="h-3 w-36" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : error ? (
           <p className="text-center mt-10 text-red-600">{error}</p>
         ) : reports.length === 0 ? (

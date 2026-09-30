@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import Toast from "../../components/Toast";
 import { FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import Skeleton from "../../components/Skeleton";
 
 const AdminPosts = () => {
   const navigate = useNavigate();
@@ -125,7 +126,24 @@ const AdminPosts = () => {
 
         {/* Posts */}
         {loading ? (
-          <p className="text-center mt-10">Loading posts...</p>
+          <div className="grid gap-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div
+                key={i}
+                className="bg-white rounded-xl shadow p-5 flex gap-4 items-start"
+              >
+                <Skeleton className="w-24 h-24 rounded-lg shrink-0" />
+                <div className="flex-1 space-y-3">
+                  <Skeleton className="h-5 w-1/2" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <div className="flex gap-4">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-3 w-28" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : error ? (
           <p className="text-center mt-10 text-red-600">{error}</p>
         ) : posts.length === 0 ? (

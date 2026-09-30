@@ -3,6 +3,7 @@ import { getAllUsers, updateUserStatus } from "../../api/adminApi";
 import { Link } from "react-router-dom";
 import Toast from "../../components/Toast";
 import { FaArrowLeft } from "react-icons/fa";
+import Skeleton from "../../components/Skeleton";
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
@@ -77,7 +78,10 @@ const AdminUsers = () => {
             <h1 className="text-3xl font-bold text-gray-900">Manage Users</h1>
             <p className="text-gray-600 mt-1">View and manage user accounts</p>
           </div>
-          <Link to="/admin" className="flex items-center gap-2 text-indigo-600 hover:underline text-sm">
+          <Link
+            to="/admin"
+            className="flex items-center gap-2 text-indigo-600 hover:underline text-sm"
+          >
             <FaArrowLeft /> Back to Dashboard
           </Link>
         </div>
@@ -108,7 +112,46 @@ const AdminUsers = () => {
 
         {/* Users Table */}
         {loading ? (
-          <p className="text-center mt-10">Loading users...</p>
+          <div className="bg-white rounded-xl shadow overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 text-gray-600 uppercase text-xs">
+                <tr>
+                  <th className="px-6 py-4 text-left">User</th>
+                  <th className="px-6 py-4 text-left">Email</th>
+                  <th className="px-6 py-4 text-left">Status</th>
+                  <th className="px-6 py-4 text-left">Role</th>
+                  <th className="px-6 py-4 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <tr key={i}>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="w-9 h-9 rounded-full" />
+                        <Skeleton className="h-4 w-28" />
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <Skeleton className="h-4 w-36" />
+                    </td>
+                    <td className="px-6 py-4">
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                    </td>
+                    <td className="px-6 py-4">
+                      <Skeleton className="h-4 w-14" />
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex gap-2">
+                        <Skeleton className="h-7 w-16 rounded-lg" />
+                        <Skeleton className="h-7 w-16 rounded-lg" />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         ) : error ? (
           <p className="text-center mt-10 text-red-600">{error}</p>
         ) : users.length === 0 ? (

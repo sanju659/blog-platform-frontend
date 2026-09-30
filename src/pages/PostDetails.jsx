@@ -7,6 +7,7 @@ import DeleteModal from "../components/DeleteModal";
 import Toast from "../components/Toast";
 import ReportModal from "../components/ReportModal";
 import MediaCarousel from "../components/MediaCarousel";
+import Skeleton from "../components/Skeleton";
 
 const PostDetails = () => {
   const { id } = useParams();
@@ -78,7 +79,31 @@ const PostDetails = () => {
   };
 
   if (loading) {
-    return <p className="text-center mt-10">Loading post...</p>;
+    return (
+      <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 py-10">
+        <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
+          <Skeleton className="w-full h-96 rounded-none" />
+          <div className="p-8 md:p-10 space-y-6">
+            <Skeleton className="h-6 w-28 rounded-full" />
+            <Skeleton className="h-10 w-3/4" />
+            <div className="flex items-center gap-4">
+              <Skeleton className="w-14 h-14 rounded-full" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+            </div>
+            <div className="space-y-3 pt-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-2/3" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (error) {

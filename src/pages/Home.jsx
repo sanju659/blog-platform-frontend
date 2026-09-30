@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import { getAllPosts } from "../api/postApi";
+import Skeleton from "../components/Skeleton";
 
 const Home = () => {
   const navigate = useNavigate(); // Initialize navigate
@@ -22,7 +23,34 @@ const Home = () => {
     fetchPosts();
   }, []);
 
-  if (loading) return <p className="text-center mt-10">Loading posts...</p>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-300">
+        <div className="max-w-6xl mx-auto p-6">
+          <h1 className="text-3xl font-bold mb-6">Latest Posts</h1>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="bg-white border rounded-lg overflow-hidden shadow-sm"
+              >
+                <Skeleton className="h-48 w-full rounded-none" />
+                <div className="p-4 space-y-3">
+                  <Skeleton className="h-5 w-3/4" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-2/3" />
+                  <div className="flex items-center gap-2 mt-4">
+                    <Skeleton className="w-8 h-8 rounded-full" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-300">
