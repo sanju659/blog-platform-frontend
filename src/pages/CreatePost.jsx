@@ -81,6 +81,18 @@ const CreatePost = () => {
 
   const handleSubmit = async (published) => {
     setError("");
+    if (!formData.title.trim()) {
+      setError("Title is required");
+      return;
+    }
+    if (!formData.content.trim()) {
+      setError("Content is required");
+      return;
+    }
+    if (formData.excerpt.length > 300) {
+      setError("Excerpt cannot exceed 300 characters");
+      return;
+    }
     setSubmitting(true);
 
     try {
@@ -113,7 +125,10 @@ const CreatePost = () => {
         }
       }, 1500);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to create post");
+      const data = err.response?.data;
+      setError(
+        data?.errors?.[0]?.message || data?.message || "Failed to create post",
+      );
       setSubmitting(false);
     }
   };
