@@ -4,7 +4,7 @@ import { getPostById, updatePost } from "../api/postApi";
 import Toast from "../components/Toast";
 import { FiUpload, FiX } from "react-icons/fi";
 
-const MAX_IMAGES = 5;
+const MAX_IMAGES = 10;
 
 const EditPage = () => {
   const { id } = useParams();

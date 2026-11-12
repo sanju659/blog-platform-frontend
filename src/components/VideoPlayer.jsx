@@ -54,11 +54,9 @@ const VideoPlayer = ({ src }) => {
     if (!video) return;
 
     if (video.paused) {
-      video.play();
-      setIsPlaying(true);
+      video.play().catch(() => {});
     } else {
       video.pause();
-      setIsPlaying(false);
     }
     wakeControls();
   };
@@ -118,7 +116,9 @@ const VideoPlayer = ({ src }) => {
     >
       <video
         ref={videoRef}
-        src={src}
+        src={`${src}#t=0.1`}
+        preload="metadata"
+        playsInline
         className="w-full h-full object-contain"
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}

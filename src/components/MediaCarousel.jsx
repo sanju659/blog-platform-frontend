@@ -66,14 +66,16 @@ const MediaCarousel = ({ media = [] }) => {
           <button
             type="button"
             onClick={goPrev}
-            className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition hover:bg-black/60"
+            aria-label="Previous"
+            className="absolute left-3 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition hover:bg-black/60"
           >
             <FiChevronLeft className="text-xl" />
           </button>
           <button
             type="button"
             onClick={goNext}
-            className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition hover:bg-black/60"
+            aria-label="Next"
+            className="absolute right-3 top-1/2 -translate-y-1/2 bg-black/40 text-white p-2 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition hover:bg-black/60"
           >
             <FiChevronRight className="text-xl" />
           </button>
@@ -114,7 +116,9 @@ const MediaCarousel = ({ media = [] }) => {
                 </div>
               ) : item.type === "video" ? (
                 <video
-                  src={item.url}
+                  src={`${item.url}#t=0.1`}
+                  preload="metadata"
+                  playsInline
                   onClick={() => setCurrent(index)}
                   className={`w-16 h-16 object-cover rounded-lg cursor-pointer border-2 transition ${
                     index === current
