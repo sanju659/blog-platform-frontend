@@ -118,6 +118,17 @@ const Login = () => {
           </div>
         </div>
 
+        {/* Forgot password */}
+        <div className="mb-6 -mt-4 text-right">
+          <button
+            type="button"
+            onClick={() => navigate("/forgot-password")}
+            className="text-sm text-indigo-600 hover:underline"
+          >
+            Forgot password?
+          </button>
+        </div>
+
         {/* Submitting the Login from  */}
         <button
           type="submit"

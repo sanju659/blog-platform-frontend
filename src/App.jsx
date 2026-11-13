@@ -20,6 +20,9 @@ import AdminPosts from "./pages/admin/AdminPosts";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminPostDetails from "./pages/admin/AdminPostDetails";
 
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+
 const App = () => {
   return (
     <>
@@ -29,6 +32,8 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* Protected route */}
         <Route
