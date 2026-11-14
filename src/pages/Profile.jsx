@@ -107,8 +107,11 @@ const Profile = () => {
       setImagePreview(null);
       setIsEditingProfile(false);
     } catch (err) {
+      const data = err.response?.data;
       setProfileError(
-        err.response?.data?.message || "Failed to update profile",
+        data?.errors?.[0]?.message ||
+          data?.message ||
+          "Failed to update profile",
       );
     } finally {
       setProfileSubmitting(false);
@@ -130,8 +133,11 @@ const Profile = () => {
 
       handleCancelPassword();
     } catch (err) {
+      const data = err.response?.data;
       setPasswordError(
-        err.response?.data?.message || "Failed to change password",
+        data?.errors?.[0]?.message ||
+          data?.message ||
+          "Failed to change password",
       );
     } finally {
       setPasswordSubmitting(false);
@@ -158,6 +164,9 @@ const Profile = () => {
             <h2 className="text-xl font-bold text-gray-900">
               {user?.fullName}
             </h2>
+            {user?.username && (
+              <p className="text-indigo-600 text-sm">@{user.username}</p>
+            )}
             <p className="text-gray-500 text-sm">{user?.email}</p>
             <span className="inline-block mt-2 text-xs bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full font-semibold capitalize">
               {user?.role}

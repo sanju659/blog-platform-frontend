@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { signup as signupApi } from "../api/authAPi";
+import { signup as signupApi, checkUsername } from "../api/authAPi";
 import see from "./../assets/see.ico";
 import unsee from "./../assets/unsee.ico";
 import Toast from "../components/Toast";
@@ -21,16 +21,24 @@ const Signup = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState("success"); // success or error
+  const [username, setUsername] = useState("");
+  const [checkingUsername, setCheckingUsername] = useState(false);
+  const [usernameCheck, setUsernameCheck] = useState(null); // { username, available, reason }
 
   // Submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (usernameFormatError || usernameResult?.available === false) {
+      setError(usernameFormatError || usernameResult.reason);
+      return;
+    }
+
     setLoading(true);
 
     try {
-      // Call signup API
-      await signupApi({ fullName, email, password });
+      await signupApi({ fullName, username, email, password });
 
       // Show success toast
       setToastMessage("Signup successful! ");
@@ -51,6 +59,44 @@ const Signup = () => {
       setLoading(false);
     }
   };
+
+  // Instant client-side format check (mirrors the backend rules)
+  const usernameFormatError = !username
+    ? ""
+    : username.length < 3
+      ? "At least 3 characters"
+      : !/^[a-z]/.test(username)
+        ? "Must start with a letter"
+        : !/^[a-z0-9_]+$/.test(username)
+          ? "Only lowercase letters, numbers and underscores"
+          : "";
+
+  // Only trust a server result that belongs to the current input
+  const usernameResult =
+    usernameCheck?.username === username ? usernameCheck : null;
+
+  // Debounced availability check
+  useEffect(() => {
+    if (!username || usernameFormatError) return;
+
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      setCheckingUsername(true);
+      try {
+        const res = await checkUsername(username);
+        if (!cancelled) setUsernameCheck({ username, ...res.data });
+      } catch {
+        if (!cancelled) setUsernameCheck(null);
+      } finally {
+        if (!cancelled) setCheckingUsername(false);
+      }
+    }, 500);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [username, usernameFormatError]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-purple-100 to-indigo-200">
@@ -85,6 +131,42 @@ const Signup = () => {
             onChange={(e) => setFullName(e.target.value)}
             required
           />
+        </div>
+
+        {/* Username */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-600 mb-1">
+            Username
+          </label>
+          <div className="relative">
+            <span className="absolute inset-y-0 left-3 flex items-center text-gray-400">
+              @
+            </span>
+            <input
+              type="text"
+              placeholder="john_doe"
+              maxLength={20}
+              className="w-full rounded-md border border-gray-300 pl-8 pr-3 py-2 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition"
+              value={username}
+              onChange={(e) =>
+                setUsername(e.target.value.toLowerCase().replace(/\s/g, ""))
+              }
+              required
+            />
+          </div>
+          {usernameFormatError ? (
+            <p className="text-xs text-red-600 mt-1">{usernameFormatError}</p>
+          ) : checkingUsername ? (
+            <p className="text-xs text-gray-500 mt-1">Checking...</p>
+          ) : usernameResult?.available ? (
+            <p className="text-xs text-green-600 mt-1">Username is available</p>
+          ) : usernameResult ? (
+            <p className="text-xs text-red-600 mt-1">{usernameResult.reason}</p>
+          ) : (
+            <p className="text-xs text-gray-500 mt-1">
+              3 to 20 characters: lowercase letters, numbers, underscores
+            </p>
+          )}
         </div>
 
         {/* Email */}
