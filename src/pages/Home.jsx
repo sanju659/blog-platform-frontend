@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate, Link } from "react-router-dom";
 import { getAllPosts } from "../api/postApi";
 import Skeleton from "../components/Skeleton";
 
@@ -83,16 +83,33 @@ const Home = () => {
                   <p className="text-gray-600 text-sm mb-3">{post.excerpt}</p>
 
                   {/* User image and full name */}
-                  <div className="flex items-center gap-2 mt-4">
-                    <img
-                      src={post.author.image}
-                      alt={post.author.fullName}
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                    <p className="text-sm text-gray-600">
-                      {post.author.fullName}
-                    </p>
-                  </div>
+                  {post.author.username ? (
+                    <Link
+                      to={`/profile/${post.author.username}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex items-center gap-2 mt-4 w-fit hover:underline"
+                    >
+                      <img
+                        src={post.author.image}
+                        alt={post.author.fullName}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                      <p className="text-sm text-gray-600">
+                        {post.author.fullName}
+                      </p>
+                    </Link>
+                  ) : (
+                    <div className="flex items-center gap-2 mt-4">
+                      <img
+                        src={post.author.image}
+                        alt={post.author.fullName}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                      <p className="text-sm text-gray-600">
+                        {post.author.fullName}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

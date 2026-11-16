@@ -5,6 +5,7 @@ import Toast from "../components/Toast";
 import { FiUpload, FiX, FiEdit2 } from "react-icons/fi";
 import see from "./../assets/see.ico";
 import unsee from "./../assets/unsee.ico";
+import { Link } from "react-router-dom";
 
 const Profile = () => {
   const { user, login, token } = useAuth();
@@ -165,7 +166,13 @@ const Profile = () => {
               {user?.fullName}
             </h2>
             {user?.username && (
-              <p className="text-indigo-600 text-sm">@{user.username}</p>
+              <Link
+                to={`/profile/${user.username}`}
+                title="View your public profile"
+                className="text-indigo-600 text-sm hover:underline"
+              >
+                @{user.username}
+              </Link>
             )}
             <p className="text-gray-500 text-sm">{user?.email}</p>
             <span className="inline-block mt-2 text-xs bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full font-semibold capitalize">

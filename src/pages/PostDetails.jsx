@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { getPostById, deletePost } from "../api/postApi";
 import { useAuth } from "../context/AuthContext";
 import { FiEdit, FiTrash2, FiAlertTriangle } from "react-icons/fi";
@@ -116,6 +116,27 @@ const PostDetails = () => {
 
   const isAuthor = user && user.id === post.author._id;
 
+  const authorInfo = (
+    <>
+      <img
+        src={post.author.image}
+        alt={post.author.fullName}
+        className="w-14 h-14 rounded-full object-cover ring-2 ring-indigo-100"
+      />
+      <div>
+        <p className="font-semibold text-gray-900 group-hover:text-indigo-600 transition">
+          {post.author.fullName}
+        </p>
+        {post.author.username && (
+          <p className="text-sm text-indigo-600">@{post.author.username}</p>
+        )}
+        <p className="text-sm text-gray-500">
+          {new Date(post.publishedAt || post.createdAt).toDateString()}
+        </p>
+      </div>
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 py-10">
       <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
@@ -138,21 +159,16 @@ const PostDetails = () => {
             {post.title}
           </h1>
 
-          <div className="flex items-center gap-4 mb-10">
-            <img
-              src={post.author.image}
-              alt={post.author.fullName}
-              className="w-14 h-14 rounded-full object-cover ring-2 ring-indigo-100"
-            />
-            <div>
-              <p className="font-semibold text-gray-900">
-                {post.author.fullName}
-              </p>
-              <p className="text-sm text-gray-500">
-                {new Date(post.publishedAt || post.createdAt).toDateString()}
-              </p>
-            </div>
-          </div>
+          {post.author.username ? (
+            <Link
+              to={`/profile/${post.author.username}`}
+              className="flex items-center gap-4 mb-10 group w-fit"
+            >
+              {authorInfo}
+            </Link>
+          ) : (
+            <div className="flex items-center gap-4 mb-10">{authorInfo}</div>
+          )}
 
           <article className="prose prose-lg prose-indigo max-w-none">
             <p className="whitespace-pre-wrap leading-relaxed text-gray-700">

@@ -22,6 +22,7 @@ import AdminPostDetails from "./pages/admin/AdminPostDetails";
 
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import PublicProfile from "./pages/PublicProfile";
 
 const App = () => {
   return (
@@ -34,6 +35,7 @@ const App = () => {
         <Route path="/signup" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/profile/:username" element={<PublicProfile />} />
 
         {/* Protected route */}
         <Route
