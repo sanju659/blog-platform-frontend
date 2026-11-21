@@ -1,9 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { FiMoreVertical, FiInfo, FiLink, FiX, FiEdit2 } from "react-icons/fi";
-import { getPublicProfile, getUserPosts } from "../api/userApi";
+import {
+  getPublicProfile,
+  getUserPosts,
+  followUser,
+  unfollowUser,
+} from "../api/userApi";
 import Skeleton from "../components/Skeleton";
 import Toast from "../components/Toast";
+import { useAuth } from "../context/AuthContext";
+import FollowListModal from "../components/FollowListModal";
 
 const PAGE_SIZE = 9;
 
@@ -58,6 +65,7 @@ const PostCard = ({ post }) => {
 
 const ProfileView = ({ username }) => {
   const navigate = useNavigate();
+  const { token } = useAuth();
 
   const [profile, setProfile] = useState(null);
   const [posts, setPosts] = useState([]);
@@ -68,6 +76,8 @@ const ProfileView = ({ username }) => {
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState("");
   const [loadMoreError, setLoadMoreError] = useState("");
+  const [followBusy, setFollowBusy] = useState(false);
+  const [listType, setListType] = useState(null); // "followers" | "following" | null
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
@@ -170,6 +180,34 @@ const ProfileView = ({ username }) => {
     }
   };
 
+  const handleFollowToggle = async () => {
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    setFollowBusy(true);
+    try {
+      const res = profile.isFollowing
+        ? await unfollowUser(profile.username)
+        : await followUser(profile.username);
+
+      setProfile((prev) => ({
+        ...prev,
+        isFollowing: res.data.isFollowing,
+        followersCount: res.data.followersCount,
+        followingCount: res.data.followingCount,
+      }));
+    } catch (err) {
+      setToast({
+        message: err.response?.data?.message || "Something went wrong",
+        type: "error",
+      });
+    } finally {
+      setFollowBusy(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 py-10">
@@ -239,6 +277,28 @@ const ProfileView = ({ username }) => {
                 Joined {formatLongDate(profile.createdAt)} · {profile.postCount}{" "}
                 {profile.postCount === 1 ? "post" : "posts"}
               </p>
+              <div className="mt-4 flex gap-6 text-sm">
+                <button
+                  onClick={() => setListType("followers")}
+                  className="hover:underline"
+                >
+                  <span className="font-bold text-gray-900">
+                    {profile.followersCount}
+                  </span>{" "}
+                  <span className="text-gray-500">
+                    {profile.followersCount === 1 ? "follower" : "followers"}
+                  </span>
+                </button>
+                <button
+                  onClick={() => setListType("following")}
+                  className="hover:underline"
+                >
+                  <span className="font-bold text-gray-900">
+                    {profile.followingCount}
+                  </span>{" "}
+                  <span className="text-gray-500">following</span>
+                </button>
+              </div>
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
@@ -248,6 +308,23 @@ const ProfileView = ({ username }) => {
                   className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-medium hover:bg-indigo-100 transition"
                 >
                   <FiEdit2 /> Edit profile
+                </button>
+              )}
+              {!profile.isOwner && (
+                <button
+                  onClick={handleFollowToggle}
+                  disabled={followBusy}
+                  className={`px-5 py-2 rounded-lg text-sm font-medium transition disabled:opacity-60 disabled:cursor-not-allowed ${
+                    profile.isFollowing
+                      ? "bg-gray-200 text-gray-700 hover:bg-red-50 hover:text-red-600"
+                      : "bg-indigo-600 text-white hover:bg-indigo-700"
+                  }`}
+                >
+                  {followBusy
+                    ? "..."
+                    : profile.isFollowing
+                      ? "Following"
+                      : "Follow"}
                 </button>
               )}
 
@@ -400,6 +477,14 @@ const ProfileView = ({ username }) => {
         </div>
       )}
 
+      {listType && (
+        <FollowListModal
+          key={listType}
+          username={profile.username}
+          type={listType}
+          onClose={() => setListType(null)}
+        />
+      )}
       {toast && (
         <Toast
           message={toast.message}
