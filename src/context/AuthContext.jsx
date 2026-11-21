@@ -1,6 +1,7 @@
 //The AuthContext uses React's Context API to create a centralized
 //authentication state that any component in your app can access
 import { createContext, useContext, useState, useEffect } from "react";
+import { getMe } from "../api/authAPi";
 
 //Creating the context
 const AuthContext = createContext();
@@ -20,27 +21,25 @@ export const AuthProvider = ({ children }) => {
   // useEffect runs AFTER the component mounts
   // This effect runs ONLY ONCE because of the empty dependency array []
   useEffect(() => {
-    // Read the token from browser localStorage (persistent storage)
     const storedToken = localStorage.getItem("token");
-
-    // Read the user data from localStorage (stored as JSON string)
     const storedUser = localStorage.getItem("user");
 
-    // Check if BOTH token and user data exist
-    // This avoids half-authenticated states
     if (storedToken && storedUser) {
-      // Restore token into React state (memory)
       setToken(storedToken);
-
-      // Convert JSON string back into JavaScript object
-      // and restore user data into React state
       setUser(JSON.parse(storedUser));
+
+      // Refresh in the background so stored data (bio, username lock...) is never stale
+      getMe()
+        .then((res) => {
+          // Ignore the result if the user logged out in the meantime
+          if (localStorage.getItem("token") !== storedToken) return;
+          localStorage.setItem("user", JSON.stringify(res.data));
+          setUser(res.data);
+        })
+        .catch(() => {});
     }
 
-     // Auth check finished
     setLoading(false);
-
-    // Empty array = run this effect only once when app loads
   }, []);
 
   //Add token and user from localStorage

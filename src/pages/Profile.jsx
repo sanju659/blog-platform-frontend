@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { updateProfile, changePassword } from "../api/authAPi";
+import { updateProfile, changePassword, checkUsername } from "../api/authAPi";
 import Toast from "../components/Toast";
 import { FiUpload, FiX, FiEdit2 } from "react-icons/fi";
 import see from "./../assets/see.ico";
 import unsee from "./../assets/unsee.ico";
-import { Link } from "react-router-dom";
+
+const BIO_MAX = 200;
 
 const Profile = () => {
   const { user, login, token } = useAuth();
@@ -14,13 +16,19 @@ const Profile = () => {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isEditingPassword, setIsEditingPassword] = useState(false);
 
-  // Profile form state
-  const [fullName, setFullName] = useState(user?.fullName || "");
-  const [email, setEmail] = useState(user?.email || "");
+  // Profile form state (filled from `user` when editing starts)
+  const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [bio, setBio] = useState("");
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [profileSubmitting, setProfileSubmitting] = useState(false);
   const [profileError, setProfileError] = useState("");
+
+  // Username availability
+  const [checkingUsername, setCheckingUsername] = useState(false);
+  const [usernameCheck, setUsernameCheck] = useState(null); // { username, available, reason }
 
   // Password form state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -35,10 +43,63 @@ const Profile = () => {
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState("success");
 
+  // Username rules
+  const usernameLocked = !!user?.usernameLockedUntil;
+  const usernameChanged =
+    isEditingProfile && !usernameLocked && username !== (user?.username || "");
+
+  // Instant client-side format check (mirrors the backend rules)
+  const usernameFormatError = !usernameChanged
+    ? ""
+    : username.length < 3
+      ? "At least 3 characters"
+      : !/^[a-z]/.test(username)
+        ? "Must start with a letter"
+        : !/^[a-z0-9_]+$/.test(username)
+          ? "Only lowercase letters, numbers and underscores"
+          : "";
+
+  // Only trust a server result that belongs to the current input
+  const usernameResult =
+    usernameChanged && usernameCheck?.username === username
+      ? usernameCheck
+      : null;
+
+  // Debounced availability check (only when the username actually changed)
+  useEffect(() => {
+    if (!usernameChanged || usernameFormatError) return;
+
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      setCheckingUsername(true);
+      try {
+        const res = await checkUsername(username);
+        if (!cancelled) setUsernameCheck({ username, ...res.data });
+      } catch {
+        if (!cancelled) setUsernameCheck(null);
+      } finally {
+        if (!cancelled) setCheckingUsername(false);
+      }
+    }, 500);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [username, usernameChanged, usernameFormatError]);
+
+  // Start editing: copy the current values into the form
+  const startEditingProfile = () => {
+    setFullName(user?.fullName || "");
+    setUsername(user?.username || "");
+    setEmail(user?.email || "");
+    setBio(user?.bio || "");
+    setProfileError("");
+    setIsEditingProfile(true);
+  };
+
   // Cancel profile edit handler
   const handleCancelProfile = () => {
-    setFullName(user?.fullName || "");
-    setEmail(user?.email || "");
     setImageFile(null);
     setImagePreview(null);
     setProfileError("");
@@ -85,15 +146,24 @@ const Profile = () => {
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
     setProfileError("");
+
+    if (
+      usernameChanged &&
+      (usernameFormatError || usernameResult?.available === false)
+    ) {
+      setProfileError(usernameFormatError || usernameResult.reason);
+      return;
+    }
+
     setProfileSubmitting(true);
 
     try {
       const formData = new FormData();
       formData.append("fullName", fullName);
       formData.append("email", email);
-      if (imageFile) {
-        formData.append("image", imageFile);
-      }
+      formData.append("bio", bio);
+      if (usernameChanged) formData.append("username", username);
+      if (imageFile) formData.append("image", imageFile);
 
       const res = await updateProfile(formData);
 
@@ -145,6 +215,13 @@ const Profile = () => {
     }
   };
 
+  const inputClass = (enabled) =>
+    `w-full px-4 py-3 border rounded-lg outline-none transition ${
+      enabled
+        ? "border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+        : "border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed"
+    }`;
+
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 py-10">
       <div className="max-w-2xl mx-auto px-6 space-y-8">
@@ -161,7 +238,7 @@ const Profile = () => {
             alt={user?.fullName}
             className="w-20 h-20 rounded-full object-cover ring-4 ring-indigo-100"
           />
-          <div>
+          <div className="min-w-0">
             <h2 className="text-xl font-bold text-gray-900">
               {user?.fullName}
             </h2>
@@ -193,7 +270,7 @@ const Profile = () => {
             </h3>
             {!isEditingProfile ? (
               <button
-                onClick={() => setIsEditingProfile(true)}
+                onClick={startEditingProfile}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-medium hover:bg-indigo-100 transition"
               >
                 <FiEdit2 /> Edit
@@ -211,20 +288,94 @@ const Profile = () => {
             {/* Full Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name
+                Display Name
               </label>
               <input
                 type="text"
-                value={fullName}
+                value={isEditingProfile ? fullName : user?.fullName || ""}
                 onChange={(e) => setFullName(e.target.value)}
                 disabled={!isEditingProfile}
-                className={`w-full px-4 py-3 border rounded-lg outline-none transition
-                  ${
-                    isEditingProfile
-                      ? "border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      : "border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed"
-                  }`}
+                maxLength={50}
+                className={inputClass(isEditingProfile)}
               />
+            </div>
+
+            {/* Username */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Username
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-4 flex items-center text-gray-400">
+                  @
+                </span>
+                <input
+                  type="text"
+                  value={isEditingProfile ? username : user?.username || ""}
+                  onChange={(e) =>
+                    setUsername(e.target.value.toLowerCase().replace(/\s/g, ""))
+                  }
+                  disabled={!isEditingProfile || usernameLocked}
+                  maxLength={20}
+                  className={`${inputClass(isEditingProfile && !usernameLocked)} pl-9`}
+                />
+              </div>
+
+              {isEditingProfile &&
+                (usernameLocked ? (
+                  <p className="text-xs text-amber-600 mt-1">
+                    You can change your username again on{" "}
+                    {new Date(user.usernameLockedUntil).toLocaleDateString(
+                      undefined,
+                      { year: "numeric", month: "long", day: "numeric" },
+                    )}
+                    .
+                  </p>
+                ) : usernameChanged ? (
+                  usernameFormatError ? (
+                    <p className="text-xs text-red-600 mt-1">
+                      {usernameFormatError}
+                    </p>
+                  ) : checkingUsername ? (
+                    <p className="text-xs text-gray-500 mt-1">Checking...</p>
+                  ) : usernameResult?.available ? (
+                    <p className="text-xs text-green-600 mt-1">
+                      Username is available
+                    </p>
+                  ) : usernameResult ? (
+                    <p className="text-xs text-red-600 mt-1">
+                      {usernameResult.reason}
+                    </p>
+                  ) : null
+                ) : (
+                  <p className="text-xs text-gray-500 mt-1">
+                    After you change it, you can't change it again for 30 days.
+                    Old profile links will stop working.
+                  </p>
+                ))}
+            </div>
+
+            {/* Bio */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Bio
+              </label>
+              <textarea
+                value={isEditingProfile ? bio : user?.bio || ""}
+                onChange={(e) => setBio(e.target.value)}
+                disabled={!isEditingProfile}
+                maxLength={BIO_MAX}
+                rows={3}
+                placeholder={
+                  isEditingProfile ? "Tell people about yourself" : ""
+                }
+                className={`${inputClass(isEditingProfile)} resize-none`}
+              />
+              {isEditingProfile && (
+                <p className="text-xs text-gray-400 mt-1 text-right">
+                  {bio.length}/{BIO_MAX}
+                </p>
+              )}
             </div>
 
             {/* Email */}
@@ -234,15 +385,10 @@ const Profile = () => {
               </label>
               <input
                 type="email"
-                value={email}
+                value={isEditingProfile ? email : user?.email || ""}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={!isEditingProfile}
-                className={`w-full px-4 py-3 border rounded-lg outline-none transition
-                  ${
-                    isEditingProfile
-                      ? "border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      : "border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed"
-                  }`}
+                className={inputClass(isEditingProfile)}
               />
             </div>
 
