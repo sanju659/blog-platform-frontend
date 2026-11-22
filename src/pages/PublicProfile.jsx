@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { FiMoreVertical, FiInfo, FiLink, FiX, FiEdit2 } from "react-icons/fi";
 import {
   getPublicProfile,
@@ -249,67 +249,74 @@ const ProfileView = ({ username }) => {
     return <p className="text-center mt-10 text-red-600">{error}</p>;
   }
 
+  // Fallback: the API says this is the viewer's own profile
+  if (profile?.isOwner) {
+    return <Navigate to="/profile" replace />;
+  }
+
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-50 to-gray-100 py-10">
       <div className="max-w-5xl mx-auto px-6 space-y-8">
         {/* Header card */}
-        <div className="bg-white rounded-2xl shadow p-6 sm:p-8">
-          <div className="flex items-start gap-5">
-            <img
-              src={profile.image}
-              alt={profile.fullName}
-              className="w-24 h-24 rounded-full object-cover ring-4 ring-indigo-100 shrink-0"
-            />
+        <div className="bg-white rounded-2xl shadow p-5 sm:p-6 lg:p-8">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
+            {/* Profile identity and information */}
+            <div className="flex items-start gap-4 sm:gap-5 flex-1 min-w-0">
+              <img
+                src={profile.image}
+                alt={profile.fullName}
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover ring-4 ring-indigo-100 shrink-0"
+              />
 
-            <div className="flex-1 min-w-0">
-              <h1 className="text-2xl font-bold text-gray-900 truncate">
-                {profile.fullName}
-              </h1>
-              <p className="text-indigo-600">@{profile.username}</p>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900 wrap-break-words">
+                  {profile.fullName}
+                </h1>
 
-              <p className="mt-3 text-gray-700 whitespace-pre-wrap wrap-break-word">
-                {profile.bio || (
-                  <span className="text-gray-400">No bio yet.</span>
-                )}
-              </p>
+                <p className="text-indigo-600 text-sm sm:text-base break-all">
+                  @{profile.username}
+                </p>
 
-              <p className="mt-3 text-sm text-gray-500">
-                Joined {formatLongDate(profile.createdAt)} · {profile.postCount}{" "}
-                {profile.postCount === 1 ? "post" : "posts"}
-              </p>
-              <div className="mt-4 flex gap-6 text-sm">
-                <button
-                  onClick={() => setListType("followers")}
-                  className="hover:underline"
-                >
-                  <span className="font-bold text-gray-900">
-                    {profile.followersCount}
-                  </span>{" "}
-                  <span className="text-gray-500">
-                    {profile.followersCount === 1 ? "follower" : "followers"}
-                  </span>
-                </button>
-                <button
-                  onClick={() => setListType("following")}
-                  className="hover:underline"
-                >
-                  <span className="font-bold text-gray-900">
-                    {profile.followingCount}
-                  </span>{" "}
-                  <span className="text-gray-500">following</span>
-                </button>
+                <p className="mt-3 text-sm sm:text-base text-gray-700 whitespace-pre-wrap wrap-break-word">
+                  {profile.bio || (
+                    <span className="text-gray-400">No bio yet.</span>
+                  )}
+                </p>
+
+                <p className="mt-3 text-xs sm:text-sm text-gray-500">
+                  Joined {formatLongDate(profile.createdAt)} ·{" "}
+                  {profile.postCount}{" "}
+                  {profile.postCount === 1 ? "post" : "posts"}
+                </p>
+
+                <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+                  <button
+                    onClick={() => setListType("followers")}
+                    className="hover:underline"
+                  >
+                    <span className="font-bold text-gray-900">
+                      {profile.followersCount}
+                    </span>{" "}
+                    <span className="text-gray-500">
+                      {profile.followersCount === 1 ? "follower" : "followers"}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => setListType("following")}
+                    className="hover:underline"
+                  >
+                    <span className="font-bold text-gray-900">
+                      {profile.followingCount}
+                    </span>{" "}
+                    <span className="text-gray-500">following</span>
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
-              {profile.isOwner && (
-                <button
-                  onClick={() => navigate("/profile")}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg text-sm font-medium hover:bg-indigo-100 transition"
-                >
-                  <FiEdit2 /> Edit profile
-                </button>
-              )}
+            {/* Profile actions */}
+            <div className="flex items-center justify-end gap-2 sm:shrink-0">
               {!profile.isOwner && (
                 <button
                   onClick={handleFollowToggle}
@@ -356,6 +363,7 @@ const ProfileView = ({ username }) => {
                     >
                       <FiInfo /> About this profile
                     </button>
+
                     <button
                       role="menuitem"
                       onClick={handleCopyLink}
@@ -498,6 +506,13 @@ const ProfileView = ({ username }) => {
 
 const PublicProfile = () => {
   const { username } = useParams();
+  const { user } = useAuth();
+
+  // Your own public profile isn't shown to you: use My Profile instead
+  if (user?.username && user.username === username.toLowerCase()) {
+    return <Navigate to="/profile" replace />;
+  }
+
   // key remounts the view, so state resets when moving between profiles
   return <ProfileView key={username} username={username} />;
 };

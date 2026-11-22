@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+// import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { updateProfile, changePassword, checkUsername } from "../api/authAPi";
 import Toast from "../components/Toast";
-import { FiUpload, FiX, FiEdit2 } from "react-icons/fi";
+import { FiUpload, FiX, FiEdit2, FiLink } from "react-icons/fi";
 import see from "./../assets/see.ico";
 import unsee from "./../assets/unsee.ico";
+import { getPublicProfile } from "../api/userApi";
+import FollowListModal from "../components/FollowListModal";
 
 const BIO_MAX = 200;
 
@@ -42,6 +44,9 @@ const Profile = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState("success");
+
+  const [counts, setCounts] = useState(null); // { followersCount, followingCount }
+  const [listType, setListType] = useState(null); // "followers" | "following" | null
 
   // Username rules
   const usernameLocked = !!user?.usernameLockedUntil;
@@ -88,6 +93,26 @@ const Profile = () => {
     };
   }, [username, usernameChanged, usernameFormatError]);
 
+  // Follower / following counts (from the existing public profile API)
+  useEffect(() => {
+    if (!user?.username) return;
+
+    let cancelled = false;
+    getPublicProfile(user.username)
+      .then((res) => {
+        if (cancelled) return;
+        setCounts({
+          followersCount: res.data.followersCount,
+          followingCount: res.data.followingCount,
+        });
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.username]);
+
   // Start editing: copy the current values into the form
   const startEditingProfile = () => {
     setFullName(user?.fullName || "");
@@ -114,6 +139,20 @@ const Profile = () => {
     setShowCurrentPassword(false);
     setShowNewPassword(false);
     setIsEditingPassword(false);
+  };
+
+  const handleCopyProfileLink = async () => {
+    try {
+      await navigator.clipboard.writeText(
+        `${window.location.origin}/profile/${user.username}`,
+      );
+      setToastMessage("Profile link copied");
+      setToastType("success");
+    } catch {
+      setToastMessage("Could not copy the link");
+      setToastType("error");
+    }
+    setShowToast(true);
   };
 
   // Handle image selection
@@ -243,13 +282,7 @@ const Profile = () => {
               {user?.fullName}
             </h2>
             {user?.username && (
-              <Link
-                to={`/profile/${user.username}`}
-                title="View your public profile"
-                className="text-indigo-600 text-sm hover:underline"
-              >
-                @{user.username}
-              </Link>
+              <p className="text-indigo-600 text-sm">@{user.username}</p>
             )}
             <p className="text-gray-500 text-sm">{user?.email}</p>
             <span className="inline-block mt-2 text-xs bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full font-semibold capitalize">
@@ -258,6 +291,43 @@ const Profile = () => {
             <p className="text-xs text-gray-400 mt-1">
               Member since {new Date(user?.createdAt).toDateString()}
             </p>
+            {user?.username && (
+              <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+                {counts && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setListType("followers")}
+                      className="hover:underline"
+                    >
+                      <span className="font-bold text-gray-900">
+                        {counts.followersCount}
+                      </span>{" "}
+                      <span className="text-gray-500">
+                        {counts.followersCount === 1 ? "follower" : "followers"}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setListType("following")}
+                      className="hover:underline"
+                    >
+                      <span className="font-bold text-gray-900">
+                        {counts.followingCount}
+                      </span>{" "}
+                      <span className="text-gray-500">following</span>
+                    </button>
+                  </>
+                )}
+                <button
+                  type="button"
+                  onClick={handleCopyProfileLink}
+                  className="inline-flex items-center gap-1.5 text-indigo-600 hover:underline"
+                >
+                  <FiLink /> Copy profile link
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -577,6 +647,15 @@ const Profile = () => {
           )}
         </div>
       </div>
+
+      {listType && user?.username && (
+        <FollowListModal
+          key={listType}
+          username={user.username}
+          type={listType}
+          onClose={() => setListType(null)}
+        />
+      )}
 
       {showToast && (
         <Toast
