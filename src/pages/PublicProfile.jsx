@@ -506,7 +506,14 @@ const ProfileView = ({ username }) => {
 
 const PublicProfile = () => {
   const { username } = useParams();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  if (loading) return null;
+
+  // Admins don't browse profiles: send them to their dashboard
+  if (user?.role === "admin") {
+    return <Navigate to="/admin" replace />;
+  }
 
   // Your own public profile isn't shown to you: use My Profile instead
   if (user?.username && user.username === username.toLowerCase()) {

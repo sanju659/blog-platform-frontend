@@ -14,6 +14,8 @@ const BIO_MAX = 200;
 const Profile = () => {
   const { user, login, token } = useAuth();
 
+  const isAdmin = user?.role === "admin";
+
   // Edit mode states
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isEditingPassword, setIsEditingPassword] = useState(false);
@@ -95,6 +97,7 @@ const Profile = () => {
 
   // Follower / following counts (from the existing public profile API)
   useEffect(() => {
+    if (!user?.username || isAdmin) return;
     if (!user?.username) return;
 
     let cancelled = false;
@@ -111,7 +114,7 @@ const Profile = () => {
     return () => {
       cancelled = true;
     };
-  }, [user?.username]);
+  }, [user?.username, isAdmin]);
 
   // Start editing: copy the current values into the form
   const startEditingProfile = () => {
@@ -291,7 +294,7 @@ const Profile = () => {
             <p className="text-xs text-gray-400 mt-1">
               Member since {new Date(user?.createdAt).toDateString()}
             </p>
-            {user?.username && (
+            {user?.username && !isAdmin && (
               <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
                 {counts && (
                   <>
@@ -648,7 +651,7 @@ const Profile = () => {
         </div>
       </div>
 
-      {listType && user?.username && (
+      {listType && user?.username && !isAdmin && (
         <FollowListModal
           key={listType}
           username={user.username}

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { getFeed } from "../api/postApi";
 import Skeleton from "../components/Skeleton";
+import { useAuth } from "../context/AuthContext";
 
 const PAGE_SIZE = 10;
 
@@ -89,7 +90,7 @@ const FeedCard = ({ post }) => {
   );
 };
 
-const Feed = () => {
+const FeedView = () => {
   const [posts, setPosts] = useState([]);
   const [cursor, setCursor] = useState(null);
   const [hasMore, setHasMore] = useState(false);
@@ -234,6 +235,16 @@ const Feed = () => {
       </div>
     </div>
   );
+};
+
+const Feed = () => {
+  const { user } = useAuth();
+
+  if (user?.role === "admin") {
+    return <Navigate to="/admin" replace />;
+  }
+
+  return <FeedView />;
 };
 
 export default Feed;
