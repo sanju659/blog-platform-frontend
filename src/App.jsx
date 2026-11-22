@@ -23,6 +23,7 @@ import AdminPostDetails from "./pages/admin/AdminPostDetails";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import PublicProfile from "./pages/PublicProfile";
+import Feed from "./pages/Feed";
 
 const App = () => {
   return (
@@ -59,6 +60,14 @@ const App = () => {
           element={
             <PrivateRoute>
               <MyPosts />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/feed"
+          element={
+            <PrivateRoute>
+              <Feed />
             </PrivateRoute>
           }
         />

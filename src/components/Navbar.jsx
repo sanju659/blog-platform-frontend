@@ -54,6 +54,9 @@ const Navbar = () => {
                   Dashboard
                 </Link>
               )}
+              <Link to="/feed" className="text-indigo-100 hover:text-white">
+                Feed
+              </Link>
               <Link to="/profile" className="text-indigo-100 hover:text-white">
                 Profile
               </Link>
@@ -143,6 +146,13 @@ const Navbar = () => {
                   Dashboard
                 </Link>
               )}
+              <Link
+                to="/feed"
+                className="block py-2 text-indigo-100 hover:text-white"
+                onClick={() => setOpen(false)}
+              >
+                Feed
+              </Link>
               <Link
                 to="/profile"
                 className="block py-2 text-indigo-100 hover:text-white"

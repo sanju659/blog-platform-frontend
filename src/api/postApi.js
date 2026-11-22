@@ -11,3 +11,5 @@ export const getMyPosts = () => api.get("/posts/my-posts");
 export const updatePost = (id, data) => api.put(`/posts/update/${id}`, data);
 
 export const deletePost = (id) => api.delete(`/posts/delete/${id}`);
+
+export const getFeed = (params) => api.get("/posts/feed", { params });
