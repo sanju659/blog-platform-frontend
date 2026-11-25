@@ -21,3 +21,15 @@ export const setReaction = (postId, reaction) =>
 
 export const removeReaction = (postId) =>
   api.delete(`/posts/${postId}/reactions`);
+
+export const getComments = (postId, params) =>
+  api.get(`/posts/${postId}/comments`, { params });
+
+export const createComment = (postId, content) =>
+  api.post(`/posts/${postId}/comments`, { content });
+
+export const editComment = (commentId, content) =>
+  api.patch(`/comments/${commentId}`, { content });
+
+export const deleteComment = (commentId) =>
+  api.delete(`/comments/${commentId}`);

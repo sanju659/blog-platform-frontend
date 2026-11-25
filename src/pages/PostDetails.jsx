@@ -9,6 +9,7 @@ import ReportModal from "../components/ReportModal";
 import MediaCarousel from "../components/MediaCarousel";
 import Skeleton from "../components/Skeleton";
 import PostReactions from "../components/PostReactions";
+import PostComments from "../components/PostComments";
 
 const PostDetails = () => {
   const { id } = useParams();
@@ -177,9 +178,12 @@ const PostDetails = () => {
             </p>
           </article>
 
-          {/* Reactions: only on posts that are public */}
+          {/* Reactions and comments: only on posts that are public */}
           {post.published && !post.isDeleted && (
-            <PostReactions postId={post._id} />
+            <>
+              <PostReactions postId={post._id} />
+              <PostComments postId={post._id} />
+            </>
           )}
 
           {/* The conditional rendering to show 'edit' and 'delete' 
