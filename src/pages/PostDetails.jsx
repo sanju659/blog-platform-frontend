@@ -8,6 +8,7 @@ import Toast from "../components/Toast";
 import ReportModal from "../components/ReportModal";
 import MediaCarousel from "../components/MediaCarousel";
 import Skeleton from "../components/Skeleton";
+import PostReactions from "../components/PostReactions";
 
 const PostDetails = () => {
   const { id } = useParams();
@@ -175,6 +176,11 @@ const PostDetails = () => {
               {post.content}
             </p>
           </article>
+
+          {/* Reactions: only on posts that are public */}
+          {post.published && !post.isDeleted && (
+            <PostReactions postId={post._id} />
+          )}
 
           {/* The conditional rendering to show 'edit' and 'delete' 
           button to the user who is the creator of the post otherwise don't show */}
